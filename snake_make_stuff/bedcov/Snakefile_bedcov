@@ -1,0 +1,117 @@
+import snakemake 
+import os
+import re
+import pandas as pd
+
+
+#snakemake -s Snakefile_bedcov --cores 1
+bacterias = [ "Bacillus_subtilis", "Pseudomonas_aeruginosa", "Staphylococcus_epidermidis"]
+
+samples_df = pd.read_table('samples_bam.tsv', names=["sample"]).set_index("sample", drop=False)
+sample_names = list(samples_df['sample'])
+
+samples_names1= sample_names[1:4]
+samples_names2= sample_names[5:8]
+samples_names3= sample_names[9:12]
+
+rule all:
+    input: 
+        expand("ref/{bacteria}.1000.GC.tsv", bacteria = bacterias),
+        expand("bam/{sample}.md.bam.bai", sample = sample_names),
+        expand("depth/{sample}.depth.csv", sample = sample_names)
+        
+
+rule index_fa:
+     input:
+          ref_fa = "ref/{bacteria}.fa"
+     output:
+          ref_fai = "ref/{bacteria}.fa.fai"
+     shell:"""
+     samtools faidx {input.ref_fa}
+    
+     
+     """
+
+   
+
+
+rule get_ref_bed:
+     input:
+          ref_fai = "ref/{bacteria}.fa.fai"
+     output:
+          ref_bed = "ref/{bacteria}.bed"
+     shell:"""
+     
+     awk 'BEGIN {{FS="\t"}}; {{print $1 FS "0" FS $2}}' {input.ref_fai} > {output.ref_bed}
+     
+     """
+
+rule get_ref_bed_1000bp_window:
+     input:
+          ref_bed = "ref/{bacteria}.bed"
+     output:
+          ref_1000_bed = "ref/{bacteria}.1000.bed"
+     shell:"""
+     
+     bedtools makewindows -b {input.ref_bed} -w 1000 > {output.ref_1000_bed}
+     
+     """
+
+
+rule get_ref_bed_1000bp_window_GC:
+     input:
+          ref_1000_bed = "ref/{bacteria}.1000.bed",
+          ref_fa = "ref/{bacteria}.fa"
+     output:
+          ref_1000_GC = "ref/{bacteria}.1000.GC.tsv"
+     shell:"""
+     
+     bedtools nuc -fi {input.ref_fa} -bed {input.ref_1000_bed} > {output.ref_1000_GC}
+     
+     """
+     
+     
+     
+     
+rule index_bam:
+     input:
+          sample_mdbam = "bam/{sample}.md.bam"
+     output:
+          sample_mdbam_index = "bam/{sample}.md.bam.bai"
+
+     shell:"""
+     
+     samtools index {input.sample_mdbam}
+     
+     """
+     
+
+
+
+rule get_depth:
+    input: 
+          sample_mdbam = "bam/{sample}.md.bam"
+    output:
+          sample_depth = "depth/{sample}.depth.csv"
+    shell:"""
+     
+     samtools depth -a {input.sample_mdbam} | tr "\t" "," > {output.sample_depth}
+     
+     """
+
+    
+
+rule get_1000bp_bed_cov_bac1:
+     input:
+          ref_1000_bed = "ref/Bacillus_subtilis.1000.bed",
+          ref_fa = "ref/Bacillus_subtilis.fa",
+          sample_mdbam = "bam/230918_Bacillus_subtilis*.md.bam"
+     output:
+          sample_bedcv = "cov/{bacteria}_{specific}.bedcov.txt"
+     wildcard_constraints:
+        specific="^[a-zA-Z0-9_]*$"
+     shell:"""
+     
+     samtools bedcov  --reference {input.ref_fa} {input.ref_1000_bed} {input.sample_mdbam} &> {output.sample_bedcov}
+     
+     """

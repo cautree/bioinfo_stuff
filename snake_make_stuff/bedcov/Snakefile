@@ -1,0 +1,56 @@
+import snakemake 
+import os
+import re
+import pandas as pd
+
+
+#######################################################################
+# this can get the first 25bp from the sequence
+#######################################################################
+
+samples_df = pd.read_table('samples.tsv', names=["sample"]).set_index("sample", drop=False)
+sample_names = list(samples_df['sample'])
+
+
+
+# Rule 'all', defining all requested output.
+rule all:
+    input: 
+        expand("sequence/{sample}.txt", sample = sample_names),
+        expand("stats/{sample}.fqchk.txt", sample = sample_names),
+        expand("counts/{sample}.count.csv" , sample = sample_names)
+
+
+rule get_sequence: 
+    input:
+        fastq = "fastq/{sample}.fastq.gz"
+    output:
+        fastq_seq = "sequence/{sample}.txt"
+    shell:
+        """
+        
+        zcat < {input.fastq} | paste - - - - | cut -f2 > {output.fastq_seq}
+        """
+        
+rule get_stats:
+    input:
+        fastq = "fastq/{sample}.fastq.gz"
+    output:
+        fastq_quality = "stats/{sample}.fqchk.txt"
+    shell:
+        """
+        
+        seqtk fqchk  {input.fastq} > {output.fastq_auality}
+        """
+
+
+rule get_counts:
+    input:
+        fastq_seq = "sequence/{sample}.txt"
+    output:
+        counts = "counts/{sample}.count.csv"
+    script:
+        "scripts/counts.py"
+      
+
+
