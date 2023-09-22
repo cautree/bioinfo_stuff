@@ -1,0 +1,1065 @@
+---
+title: "explore"
+output: html_document
+date: '2022-07-06'
+---
+
+ls /srv/shiny-server/seqwell_shiny/
+
+sudo rm -rf /srv/shiny-server/seqwell_shiny/
+mv shiny_2 seqwell_shiny
+sudo mv seqwell_shiny /srv/shiny-server/seqwell_shiny/
+sudo chmod -R 777 /srv/shiny-server/seqwell_shiny/
+
+library
+```{r}
+library(dplyr)
+library(lubridate)
+```
+
+
+
+##
+```{r}
+run_info <- readr::read_csv("~/Documents/shiny_dashboard/shiny_2/info/run_info.csv")
+all_runs <- run_info[1:6,]
+
+
+path <- all_runs$path
+sheet <- all_runs$sheets
+  
+  ngs <- purrr::map2( path, sheet, read_sheet )
+  run_name_vec <- all_runs$run_name
+  
+  pct_Perfectbarcode <- purrr::map2_dfr( ngs, run_name_vec, get_pct_Perfectbarcode)
+  pct_One_mismatchbarcode <-  purrr::map2_dfr( ngs,run_name_vec, get_pct_One_mismatchbarcode)
+  pct_Q30bases <- purrr::map2_dfr( ngs, run_name_vec, get_pct_Q30bases)
+  pct_PFClusters <- purrr::map2_dfr( ngs, run_name_vec, get_pct_PFClusters)
+  
+  if(nrow(pct_Perfectbarcode)<1) {
+    report <- NULL
+  } else{
+    
+    report <- pct_Perfectbarcode %>% 
+      dplyr::left_join( pct_One_mismatchbarcode, by = c("run_name", "Lane")) %>% 
+      dplyr::left_join( pct_Q30bases, by = c("run_name", "Lane")) %>% 
+      dplyr::left_join( pct_PFClusters, by = c("run_name", "Lane")) %>% 
+      dplyr::select( run_name, Lane, `% PFClusters`, `% >= Q30bases`, `% Perfectbarcode`, `% One mismatchbarcode`)
+    
+  }
+  
+ names(report) 
+  
+ 
+  
+```
+
+##
+```{r}
+sample_info <- readr::read_csv("info/sheet_info.csv")
+sample_info
+```
+
+
+##
+```{r}
+sample_info_s <- sample_info %>% 
+  tidyr::separate( path, c("a","b", "run_name"), sep="/", remove =F) %>% 
+  tidyr::separate( run_name, c("date", "d"), sep="_", remove =F) %>% 
+  dplyr::mutate( date = lubridate::as_date(date)) %>% 
+  dplyr::select( -a, -b, -d) %>% 
+  dplyr::mutate(run_name = stringr::str_replace_all(run_name, ".xlsx", ""))
+
+sample_info_s
+```
+##
+```{r}
+a <- readxl::read_excel(sample_info_s$path[[1]], sheet = sample_info_s$sheets[[1]])
+a
+
+```
+##
+```{r}
+names(a)
+```
+
+
+##
+```{r}
+df_sheet <- readr::read_csv("~/Documents/shiny_dashboard/shiny_2/info/sheet_info.csv")
+get_sheet_summary_reports(df_sheet)
+```
+
+##########################################################################################################
+for meta
+
+
+## check 
+```{r}
+
+list.files("meta_data")
+
+list.files("other")
+
+df_meta_1 <- readr::read_csv("other/seqWellSequencerRunprojectsResults.csv")
+df_meta_1
+
+df_meta_2 <- readr::read_csv("other/2022_Jan-Apr_analysis_for_sequencing_runs.csv")
+df_meta_2
+
+a = names(df_meta_1)
+b = names(df_meta_2)
+a
+b
+
+df_meta <- dplyr::bind_rows( df_meta_1, df_meta_2)
+
+```
+
+
+##
+```{r}
+names(df_meta)
+```
+
+
+
+
+##
+```{r}
+df_meta <- df_meta %>% 
+  tidyr::separate ( Project, c("a", "project_name") , sep=":") %>% 
+  dplyr::mutate( project_name = stringr::str_trim( project_name)) %>% 
+  dplyr::mutate( project_name = stringr::str_replace_all(project_name, " ", "_")) %>% 
+  tidyr::separate( `BaseSpace Name`, c("run_name_a", "run_name_b", "c"), sep="_") %>% 
+  dplyr::mutate( run_name = paste( run_name_a, run_name_b, sep="_")) %>% 
+  dplyr::select( run_name, project_name) %>% 
+  dplyr::filter(! is.na(project_name))
+
+df_meta
+
+readr::write_csv( df_meta, "meta_data/meta_data.csv")
+
+
+
+table(df_meta$project_name)
+
+```
+#--------------------------------------------explore wgs data
+
+##
+```{r}
+file_name <- list.files("data/wgs")
+
+df <- data.frame(file_name, stringsAsFactors = F )
+df <- df %>% 
+  tidyr::separate( file_name, c("a","b","c","d"), sep="_", remove =F) %>% 
+  dplyr::mutate( run_name = paste(a,b, sep="_")) %>% 
+  dplyr::select(-a, -b, -c, -d)
+
+```
+
+## check earlier run name
+```{r}
+run_info <- readr::read_csv("~/Documents/shiny_dashboard/shiny_2/info/run_info.csv")
+common <- intersect( df$run_name, run_info$run_name)
+
+```
+
+
+
+##
+```{r}
+
+list.files("data/wgs")
+
+
+```
+
+
+PCT_PF_READS_ALIGNED
+PCT_PF_READS_IMPROPER_PAIRS
+PCT_CHIMERAS
+MEDIAN_INSERT_SIZE
+MEDIAN_ABSOLUTE_DEVIATION
+MIN_INSERT_SIZE
+MAX_INSERT_SIZE
+PERCENT_DUPLICATION
+AT_DROPOUT
+GC_DROPOUT
+
+
+##
+```{r}
+wgs_path <- list.files("data/wgs")
+wgs_path <- paste( "data/wgs/", wgs_path, sep="")
+
+purrr::map( wgs_path, excel_sheets)
+```
+
+
+```{r}
+path <- "data/wgs/20220523_MiSeq-Sharkboy_ecoli_REL606.xlsx"
+excel_sheets(path = path)
+df1 <- readxl::read_excel("data/wgs/20220523_MiSeq-Sharkboy_ecoli_REL606.xlsx", sheet = "CollectAlignmentSummaryMetrics")
+grep("PCT_CHIMERAS", names(df1), value =T)
+a=names(df1) #PCT_PF_READS_ALIGNED  PCT_PF_READS_IMPROPER_PAIRS PCT_CHIMERAS
+names(df1)[1] = "sample_ID"
+df1 <- df1 %>% 
+  dplyr::select( sample_ID, PCT_PF_READS_ALIGNED , PCT_PF_READS_IMPROPER_PAIRS, PCT_CHIMERAS)
+
+df2 <- readxl::read_excel("data/wgs/20220523_MiSeq-Sharkboy_ecoli_REL606.xlsx", sheet = "CollectInsertSizeMetrics")
+b=names(df2) #MEAN_INSERT_SIZE MEDIAN_ABSOLUTE_DEVIATION  MIN_INSERT_SIZE  MAX_INSERT_SIZE
+names(df2)[1] = "sample_ID"
+df2 <- df2 %>% 
+  dplyr::select( sample_ID, MEAN_INSERT_SIZE, MEDIAN_ABSOLUTE_DEVIATION,  MIN_INSERT_SIZE,  MAX_INSERT_SIZE)
+
+df3 <- readxl::read_excel("data/wgs/20220523_MiSeq-Sharkboy_ecoli_REL606.xlsx", sheet = "MarkDuplicates")
+c=names(df3) #PERCENT_DUPLICATION
+names(df3)[1] = "sample_ID"
+df3 <- df3 %>% 
+  dplyr::select( sample_ID, PERCENT_DUPLICATION)
+
+df4 <- readxl::read_excel("data/wgs/20220523_MiSeq-Sharkboy_ecoli_REL606.xlsx", sheet = "CollectGcBiasMetrics")
+d=names(df4) #AT_DROPOUT  GC_DROPOUT
+names(df4)[1] = "sample_ID"
+df4 <- df4 %>% 
+  dplyr::select( sample_ID, AT_DROPOUT,  GC_DROPOUT)
+
+df_wgs <- df1 %>% 
+  dplyr::left_join(df2, by="sample_ID") %>% 
+  dplyr::left_join(df3, by="sample_ID") %>%
+  dplyr::left_join(df4, by="sample_ID") 
+
+names(df_wgs)
+```
+
+
+##
+```{r}
+
+get_wgs_data <- function( path, run_name){
+  
+  df1 <- readxl::read_excel(path, sheet = "CollectAlignmentSummaryMetrics") 
+  names(df1)[1] = "sample_ID"
+  df1 <- df1 %>% 
+    dplyr::select( sample_ID, PCT_PF_READS_ALIGNED , PCT_PF_READS_IMPROPER_PAIRS, PCT_CHIMERAS) %>% 
+    dplyr::mutate( run_name = run_name)
+  
+  df2 <- readxl::read_excel(path, sheet = "CollectInsertSizeMetrics")
+  b=names(df2) 
+  names(df2)[1] = "sample_ID"
+  df2 <- df2 %>% 
+    dplyr::select( sample_ID, MEAN_INSERT_SIZE, MEDIAN_ABSOLUTE_DEVIATION,  MIN_INSERT_SIZE,  MAX_INSERT_SIZE)
+  
+  df3 <- readxl::read_excel(path, sheet = "MarkDuplicates")
+  c=names(df3) 
+  names(df3)[1] = "sample_ID"
+  df3 <- df3 %>% 
+    dplyr::select( sample_ID, PERCENT_DUPLICATION)
+  
+  df4 <- readxl::read_excel(path, sheet = "CollectGcBiasMetrics")
+  d=names(df4) 
+  names(df4)[1] = "sample_ID"
+  df4 <- df4 %>% 
+    dplyr::select( sample_ID, AT_DROPOUT,  GC_DROPOUT)
+  
+  df_wgs <- df1 %>% 
+    dplyr::left_join(df2, by="sample_ID") %>% 
+    dplyr::left_join(df3, by="sample_ID") %>%
+    dplyr::left_join(df4, by="sample_ID") %>% 
+    dplyr::select(run_name, sample_ID,  everything())
+  
+  df_summary = as.data.frame(purrr::map(df_wgs[-c(1:2)], mean))
+  df_summary <- df_summary %>% 
+    dplyr::mutate( run_name = run_name) %>% 
+    dplyr::select(run_name, everything())
+  
+  return( df_summary )
+  
+}
+
+```
+
+
+
+
+##
+```{r}
+wgs_info<- readr::read_csv("~/Documents/shiny_dashboard/shiny_2/info/wgs_info.csv")
+path_list <- wgs_info$path
+run_name_list <- wgs_info$run_name
+
+all_data <- purrr::map2_dfr(path_list, run_name_list,get_wgs_data )
+
+
+```
+
+
+
+error occurred when the same day, the plate are exact the same
+##
+```{r}
+#fastq_220706-UDI
+
+df_sheet <- readr::read_csv("~/Documents/shiny_dashboard/shiny_2/info/sheet_info.csv")
+df_sheet_s <- df_sheet %>% 
+  dplyr::filter( grepl("fastq_220706",run_pb))
+
+df_sheet_s
+```
+
+
+
+
+###########################################################################################
+## test about servies
+###########################################################################################
+
+
+```{r}
+
+list.files("other")
+
+
+
+```
+
+
+
+```{bash}
+cat other/20220506_MiSeq-Sharkboy.links.txt
+```
+
+##
+
+Each run is in its own folder, and includes the ".stats.txt" file, the ".links.txt" file, and a csv file for each plate. The goal here is just to have a page that displays for each run that has a summary of how many gigabases of data are in each plate (from the stats file) as well as some basic assembly stats for each plate. I think probably to start with, we want to display the # of wells with an assembly (ie: not a blank line in the .csv file), the # of wells with a circular assembly, and the # of wells with at least 100 in the "# Sequences" field and at least 40 in the "MEAN_coverage" field. Then, if we could just put the links from the ".links.txt" file at the bottom of the page, that would be super helpful.
+```{bash}
+cat other/20220506_MiSeq-Sharkboy.stats.txt
+```
+
+```{bash}
+cat other/AS7877-P1-DWP1_SO11138.csv | head
+```
+
+
+##
+```{r}
+df <- readr::read_csv("other/AS7877-P1-DWP1_SO11138.csv")
+
+df
+dim(df)
+names(df)
+
+
+```
+
+
+##
+```{r}
+
+length( df$Length)
+table(df$Circle)
+
+w_an_assembly <- df %>% 
+  dplyr::filter( ! is.na(Length)) %>% 
+  dplyr::summarise(n=n()) %>% 
+  dplyr::pull(n)
+
+w_circular_assembly <- df %>% 
+  dplyr::filter(Circle ==1) %>% 
+  dplyr::summarise(n=n()) %>% 
+  dplyr::pull(n)
+
+seq_count_coverage_filtered <- df %>% 
+  dplyr::filter( `# Sequences` >100 & MEAN_coverage>40) %>% 
+  dplyr::summarise(n=n()) %>% 
+  dplyr::pull(n)
+
+
+```
+
+
+
+## 
+```{r}
+
+run_names = list.files("data/services/")
+
+
+stats_files_in_folder  <-  function(x){
+  files = list.files(paste("data/services/", x, sep=""), pattern = "stats.txt")
+  return(files)
+  
+}
+
+
+plate_files_in_folder  <-  function(x){
+  files = list.files(paste("data/services/", x, sep=""), pattern = "csv")
+  return(files)
+  
+}
+
+
+links_files_in_folder  <-  function(x){
+  files = list.files(paste("data/services/", x, sep=""), pattern = "links.txt")
+  return(files)
+  
+}
+
+
+service_df = data.frame( run_name  = run_names, stringsAsFactors = F )
+
+
+file_paths <- service_df %>% 
+  dplyr::mutate( files = purrr::map(run_name, stats_files_in_folder)) %>% 
+  tidyr::unnest() %>% 
+  dplyr::mutate( path =  paste("data/services", run_name, files, sep="/" )) 
+
+
+
+service_stats <- file_paths %>% 
+  dplyr::mutate( size_rep = purrr::map(path, function(x){
+    y = readr::read_table(x, col_names = F) %>% 
+      dplyr::filter(! X1 %in% c("Undetermined", "Total")) %>% 
+      dplyr::rename( plate_name = X1,
+                 size = X2)
+    return(y)
+    
+  })) %>% 
+  tidyr::unnest() %>% 
+  dplyr::mutate( plate_name = stringr::str_replace_all(plate_name, "_FASTQ", "")) %>% 
+  dplyr::select(run_name, plate_name, size) %>% 
+  dplyr::mutate( key = paste(run_name, plate_name, sep="_"))
+
+
+
+plate_df <- service_df %>% 
+  dplyr::mutate( file_name = purrr::map(run_name, plate_files_in_folder)) %>% 
+  tidyr::unnest() %>% 
+  dplyr::mutate( plate_name = stringr::str_replace_all(file_name, ".csv", "")) %>% 
+  dplyr::distinct() %>% 
+  dplyr::mutate( key = paste(run_name, plate_name, sep="_")) %>% 
+  dplyr::mutate( path =  paste("data/services", run_name, file_name, sep="/" )) 
+
+common <- intersect( service_stats$key, plate_df$key)
+
+service_stats_s <- service_stats %>% 
+  dplyr::filter( key %in% common ) %>% 
+  dplyr::select(-key) %>% 
+  tidyr::separate( run_name, c("date", "a"), sep="_", remove =F) %>% 
+  dplyr::mutate( date = lubridate::as_date(date)) %>% 
+  tidyr::separate( run_name, c("b","Sequencer"), sep="_", remove = F) %>% 
+  dplyr::select( -a, -b) 
+
+
+
+
+
+service_stats_s
+
+plate_df_s <- plate_df %>% 
+  dplyr::filter( key %in% common ) %>% 
+  dplyr::select(-key) 
+
+plate_df_s
+
+
+link_df <- service_df %>% 
+  dplyr::mutate( file_name = purrr::map(run_name, links_files_in_folder)) %>% 
+  dplyr::mutate( path =  paste("data/services", run_name, file_name, sep="/" ) ) %>% 
+  dplyr::mutate( link = purrr::map(path, function(x){
+    y = readr::read_table(x, col_names = F) 
+    names(y) = "links"
+    return(y)
+    
+  })) %>% 
+  tidyr::unnest() %>% 
+  dplyr::select( -file_name, -path)%>% 
+  tidyr::separate( run_name, c("date", "a"), sep="_", remove =F) %>% 
+  dplyr::mutate( date = lubridate::as_date(date)) %>% 
+  tidyr::separate( run_name, c("b","Sequencer"), sep="_", remove = F) %>% 
+  dplyr::select( -a, -b) 
+
+
+
+get_assemble_rep <- function(x){
+  
+  df = readr::read_csv(x)
+  
+  w_an_assembly <- df %>% 
+  dplyr::filter( ! is.na(Length)) %>% 
+  dplyr::summarise(n=n()) %>% 
+  dplyr::pull(n)
+
+w_circular_assembly <- df %>% 
+  dplyr::filter(Circle ==1) %>% 
+  dplyr::summarise(n=n()) %>% 
+  dplyr::pull(n)
+
+seq_count_coverage_filtered <- df %>% 
+  dplyr::filter( `# Sequences` >100 & MEAN_coverage>40) %>% 
+  dplyr::summarise(n=n()) %>% 
+  dplyr::pull(n)
+
+rep = data.frame( w_an_assembly = w_an_assembly,
+             w_circular_assembly = w_circular_assembly,
+             Sequences_counts_100_MEAN_coverage_40 = seq_count_coverage_filtered, stringsAsFactors = F )
+
+return( rep)
+  
+  
+  
+}
+
+
+assemble_report <- plate_df_s %>% 
+  dplyr::mutate( report = purrr::map(path, get_assemble_rep)) %>% 
+  tidyr::unnest() %>% 
+  dplyr::select(-file_name, -path)
+
+
+
+readr::write_csv( link_df, "info/service_link.csv")
+
+service_report_all <- service_stats_s %>%
+  dplyr::left_join( assemble_report, by =c("run_name", "plate_name")) 
+
+readr::write_csv( service_report_all, "info/service_report.csv")
+
+```
+
+
+
+##
+```{r}
+
+service_stats_s #126
+assemble_report #126
+
+length(unique(link_df$run_name))
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+###################################################################
+# about project group
+##################################################################
+
+
+
+## about projects file 20220823
+```{r}
+list.files("other")
+
+projects <- readr::read_csv("other/20220823_run_projects.csv")
+projects
+
+projects_old <- readr::read_csv("other/seqWellSequencerRunprojectsResults.csv")
+projects_olds <- projects_old %>% 
+  dplyr::mutate( Project_old = Project) %>% 
+  dplyr::select(`BaseSpace Name`, Project_old)
+
+projects_updated <- projects %>% 
+  dplyr::full_join( projects_olds, by ="BaseSpace Name")
+  
+projects_updated
+
+table(projects_updated$Project, useNA = "ifany")
+
+
+?table
+```
+
+
+##
+```{r}
+table(projects_updated$Project_old, useNA = "ifany")
+```
+
+
+##
+```{r}
+projects <- projects %>% 
+  dplyr::mutate( Project = stringr::str_replace_all(Project, " ", "")) %>% 
+  dplyr::mutate( Project = stringr::str_replace_all(Project, "InvitaepW-LR", "Invitae_pW-LR")) %>% 
+  dplyr::mutate( `BaseSpace Name`  = gsub("\\d+$", "", `BaseSpace Name` )) %>% 
+  dplyr::mutate( `BaseSpace Name`  = gsub("_$", "", `BaseSpace Name` ))
+
+#names(projects)  = c("run_name", "project_name")
+
+
+
+readr::write_csv(projects, "meta_data/meta_data.csv" )
+
+table(projects$project_name)
+```
+
+
+
+
+
+##
+```{r}
+
+#sheet info
+# service info
+
+sheet <- readr::read_csv("info/sheet_info.csv")
+service <- readr::read_csv("info/service_report.csv")
+
+a <- sheet$sheets
+b <- paste(service$plate_name, "FASTQ", sep="_")
+
+intersect(a,b)
+
+```
+
+
+
+
+
+##
+```{r}
+all_service_run = readr::read_csv("info/service_info.csv")
+all_service_run <- all_service_run$run_name
+
+get_size_for_all_services <- function( all_service_run){
+  
+  service_df = data.frame( run_name  = all_service_run, stringsAsFactors = F )
+  
+  file_paths <- service_df %>% 
+    dplyr::mutate( files = purrr::map(run_name, stats_files_in_folder)) %>% 
+    tidyr::unnest() %>% 
+    dplyr::mutate( path =  paste("data/services", run_name, files, sep="/" )) 
+  
+  
+  service_stats <- file_paths %>% 
+    dplyr::mutate( size_rep = purrr::map(path, function(x){
+      y = readr::read_table(x, col_names = F) 
+      
+      y1 = y %>% 
+        dplyr::filter( X1 %in% c("Undetermined", "Total")) %>% 
+        dplyr::mutate(X2 = stringr::str_replace_all(X2, "Gb", "")) %>% 
+        dplyr::mutate(X2 = as.numeric(X2)) %>% 
+        dplyr::rename( group = X1 ,
+                       size = X2) 
+      
+      y2 = y %>%
+        dplyr::filter(! X1 %in% c("Undetermined", "Total")) %>% 
+        dplyr::mutate(X2 = stringr::str_replace_all(X2, "Gb", "")) %>% 
+        dplyr::mutate(X2 = as.numeric(X2)) %>% 
+        dplyr::summarise( size = sum(X2)) %>% 
+        dplyr::mutate( 
+                       group = "Total - Undetermined")
+      
+      y_res = dplyr::bind_rows(y1, y2)
+      
+      return(y_res)
+      
+    })) %>% 
+    tidyr::unnest() %>% 
+    dplyr::select(run_name, group, size) %>% 
+    dplyr::mutate( size = paste(size, "Gb", sep="")) %>% 
+    tidyr::spread( group, size) %>% 
+    dplyr::select( run_name, Total, Undetermined, `Total - Undetermined`)
+  
+  return(service_stats)
+  
+  
+}
+
+
+get_size_for_all_services(all_service_run)
+
+
+
+
+```
+
+
+
+
+20220506_MiSeq-Sharkboy
+2022-05-06
+MiSeq-Sharkboy
+
+# 	run_name   Sequencer   date
+##
+```{r}
+
+balancing_info = data.frame( 
+                             path = c("data/fastq/20220315_MiSeq-Appa.xlsx", "data/fastq/20220315_MiSeq-Appa.xlsx"), 
+                             run_name = c("20220315_MiSeq-Appa", "20220315_MiSeq-Appa"), 
+                             Sequencer = c("MiSeq-Appa", "MiSeq-Appa"), 
+                             sheet = c("220310_uri_FASTQ","220315_LZ_FASTQ"),
+                             date = c(lubridate::as_date("2022-03-15"),  lubridate::as_date("2022-03-15") ), stringsAsFactors = F)
+
+balancing_info
+
+#readr::write_csv( balancing_info, "info/balancing_info.csv")
+
+
+run_info <- readr::read_csv("info/sheet_info.csv")
+
+
+tail(run_info, 100)
+grep ( "20220315_MiSeq-Appa", run_info$run_name)
+
+##
+#220315_uri_FASTQ
+#220315_LZ_FASTQ
+
+balancing_info
+```
+
+
+
+
+## recreate balancing sheet
+```{r}
+
+
+sheet_info <- readr::read_csv("info/sheet_info.csv")
+
+balancing_runs <- c("20220315_MiSeq-Appa","20220513_MiSeq-Sharkboy","20220616_MiSeq-Sharkboy","20220622_MiSeq-Appa","20220628_MiSeq-Sharkboy")
+
+list.files("other/sbx_balancing/")
+
+sheet_info
+
+sheet_info_ss <- sheet_info %>% 
+  dplyr::filter( run_name %in% balancing_runs) %>% 
+  dplyr::select( path, run_name, Sequencer, sheets, date) %>% 
+  dplyr::rename( sheet = sheets)
+
+sheet_info_ss
+
+readr::write_csv( sheet_info_ss, "info/balancing_info.csv")
+
+balancing_run_name = paste(sheet_info_ss$run_name, sheet_info_ss$sheet, sep=":")
+balancing_run_name
+
+length(unique(balancing_run_name))
+
+```
+
+
+
+##
+```{r}
+### this is for testing
+
+#######
+list.files("info")
+balancing_info <- readr::read_csv("info/balancing_info.csv")
+balancing_info_s <- balancing_info %>% 
+  dplyr::filter( sheet =="220628-PB048_FASTQ")
+
+a = balancing_info_s$path[[1]]
+b = balancing_info_s$sheet[[1]]
+
+b_sheet = read_balancing_sheet(a,b)
+res = get_fraction_of_plate_stats(b_sheet)
+res
+
+res = get_fraction_of_plate_counts(b_sheet)
+res
+
+b_sheet_labeld = get_fraction_of_plate_labelled(b_sheet)
+
+get_bar_plot_fraction_of_plate(b_sheet)
+
+table(b_sheet_labeld$color)
+
+
+
+gplots::col2hex(c("red","tomato","salmon","grey","Light Sky Blue","Dodger Blue", "blue"))
+
+```
+
+
+
+
+
+## get the balancing set
+```{r}
+
+list.files("info")
+
+df <- readr::read_csv("info/balancing_info.csv")
+
+
+df_s <- df %>% 
+  dplyr::add_count(run_name) %>% 
+  dplyr::filter( n==3)
+df_s
+
+
+readr::write_csv( df_s, "info/balancing_calculation_info.csv")
+
+```
+
+
+## for calculating balancing
+```{r}
+
+get_balancing_calculation <- function(x){
+  
+  theoretical_avg = 1/96
+  `Current Volume (mL)` = 10
+  `Stock Conc.` = 200
+  `SB Conc. (nM)` = 8
+  
+  calculation_df = balancing_calculation_info %>% 
+    dplyr::filter( run_name == x)
+  y = unique(calculation_df$path)
+  z = calculation_df$sheet
+  csv1 = readxl::read_excel(y, sheet=z[[1]]) %>% 
+    dplyr::select(well, `% of the plate` ) %>% 
+    dplyr::rename( Library1 = `% of the plate`) %>% 
+    dplyr::mutate( Library1 = Library1/100)
+  csv2 = readxl::read_excel(y, sheet=z[[2]]) %>% 
+    dplyr::select(well, `% of the plate` ) %>% 
+    dplyr::rename( Library2 = `% of the plate`) %>% 
+    dplyr::mutate( Library2 = Library2/100)
+  csv3 = readxl::read_excel(y, sheet=z[[3]]) %>% 
+    dplyr::select(well, `% of the plate` ) %>% 
+    dplyr::rename( Library3 = `% of the plate`) %>% 
+    dplyr::mutate( Library3 = Library3/100)
+  
+  #1000*((((Q5*B5)*I5)-(Q5*B5))/R5)
+  # Current Volume (mL)
+  # 1000*((((`Current Volume (mL)`*`SB Conc. (nM)`)*`Actual Adjustement`)-(`Current Volume (mL)`*`SB Conc. (nM)`))/`Stock Conc.`)
+  csv = csv1 %>% 
+    dplyr::inner_join( csv2, by = "well") %>% 
+    dplyr::inner_join( csv3, by = "well") %>% 
+    dplyr::mutate( average = (Library1 + Library2 + Library3  )/3 ) %>% 
+    dplyr::mutate( `Auto-generated Adjustment factor` = theoretical_avg/average) %>% 
+    dplyr::mutate( Dilute = ifelse(`Auto-generated Adjustment factor` < 1, "Dilute", "")) %>% 
+    dplyr::mutate( Supercharge = ifelse(`Auto-generated Adjustment factor` > 1, "Supercharge", "")) %>% 
+    dplyr::mutate( `Next Round SB Conc. (nM)` = `Auto-generated Adjustment factor`*`SB Conc. (nM)`) %>% 
+    dplyr::mutate( `Volume MTSB (ml)`  = `Current Volume (mL)`/`Auto-generated Adjustment factor`  -`Current Volume (mL)` ) %>% 
+    dplyr::mutate( `Volume MTSB (ul)` =  1000*`Volume MTSB (ml)` ) %>% 
+    dplyr::mutate(`Volume Stock (µl)` = 1000*((((`Current Volume (mL)`*`SB Conc. (nM)`)*`Auto-generated Adjustment factor`)-(`Current Volume (mL)`*`SB Conc. (nM)`))/`Stock Conc.`)) %>% 
+    dplyr::mutate( `Volume MTSB (ml)` = ifelse( Dilute=="", NA, `Volume MTSB (ml)`)) %>% 
+    dplyr::mutate( `Volume MTSB (ul)` = ifelse( Dilute=="", NA, `Volume MTSB (ul)`)) %>% 
+    dplyr::mutate( `Volume Stock (µl)` = ifelse( Supercharge=="", NA, `Volume Stock (µl)`))
+  
+  return(csv)
+  
+  
+  
+}
+
+
+balancing_calculation_info
+res = get_balancing_calculation( "20220616_MiSeq-Sharkboy")
+
+res
+
+
+
+
+```
+
+
+
+
+
+
+```{r}
+
+df = readr::read_csv("~/Documents/shiny_dashboard/shiny_2/data/crosstalk/20220811_MiSeq-Sharkboy_220811-96_FASTQ_PF_clusters.sorted.csv")
+  df = as.data.frame( df)
+  rownames(df) = df$i7
+  df$i7 = NULL
+  all_reads_total_count = sum(df)
+  
+  good_reads_count = sum(diag(as.matrix(df)))
+  good_reads_count_pct = good_reads_count*100/all_reads_total_count
+  good_reads_well_avg = sum(diag(as.matrix(df)))/96
+  good_reads_well_sd = sd(diag(as.matrix(df)))
+  
+  
+  bad_df = as.matrix(df)
+  diag(bad_df )  = NA
+  bad_reads_count = sum(bad_df, na.rm = T)
+  bad_reads_count_pct = bad_reads_count*100/all_reads_total_count
+  bad_reads_avg = sum(bad_df, na.rm = T) / (96*95)
+  bad_reads_sd = sd(bad_df, na.rm = T)
+  
+  Correct_Barcode_Combinations = tibble(      group = "Correct_Barcode_Combinations",
+                                              Total_Reads = good_reads_count,
+                                             `% of Total Reads` = good_reads_count_pct,
+                                             `Average Reads` = good_reads_well_avg,
+                                             `Standard Deviation` = good_reads_well_sd)
+  
+  Incorrect_Barcode_Combinations = tibble( group = "Incorrect_Barcode_Combinations",
+                                              Total_Reads = bad_reads_count,
+                                             `% of Total Reads` = bad_reads_count_pct,
+                                             `Average Reads` = bad_reads_avg,
+                                             `Standard Deviation` = bad_reads_sd)
+  
+  two_combined = tibble( group = "all_Barcode_Combinations",
+                                              Total_Reads = all_reads_total_count,
+                                             `% of Total Reads` = NA,
+                                             `Average Reads` = NA,
+                                             `Standard Deviation` = NA)
+  
+  summary_df = dplyr::bind_rows( Correct_Barcode_Combinations, Incorrect_Barcode_Combinations, two_combined)
+  
+
+```
+
+
+
+
+## for the cross talk
+```{r}
+
+get_crosstalk_i5_boxplot = function( path) {
+  
+  df = readr::read_csv(path)
+  df = as.data.frame( df)
+  rownames(df) = df$i7
+  df$i7 = NULL
+  all_reads_total_count = sum(df)
+  
+  good_df = as.data.frame(diag(as.matrix(df)))
+  names(good_df) = "Correct_Barcode_Combinations"
+  good_df = good_df %>% 
+    dplyr::add_rownames(var = "i5")
+  
+  bad_df = as.data.frame( bad_df)
+  
+  bad_df_long = bad_df %>% 
+    dplyr::add_rownames( var = "i7") %>% 
+    dplyr::mutate( i7 = paste("i7", i7, sep="_")) %>% 
+    tidyr::gather( A01: H12, key="i5", value = "Incorrect_Barcode_Combinations") %>% 
+    dplyr::filter( !is.na(Incorrect_Barcode_Combinations))
+  
+  
+  df_combined = bad_df_long %>% 
+    dplyr::left_join( good_df, by = "i5")
+  
+  n = round(all_reads_total_count*0.001,0)
+  
+  p = df_combined %>% 
+    ggplot()+ 
+    geom_boxplot(aes(i5, Incorrect_Barcode_Combinations )) +
+    geom_point( aes(i5, Correct_Barcode_Combinations)) +
+    scale_y_log10(labels = comma) +
+    geom_hline(yintercept=n,linetype=2, color = "red") +
+    geom_text(aes(20,n,label = paste("0.1% threshold,", n, "reads",sep=" "), vjust = -1, color = "red")) +
+    ylab("Reads") +
+    xlab("I5-TR") +
+    theme(axis.text.x = element_text(angle = 90))+
+    guides(color = FALSE)
+  
+  
+  return(p)
+  
+}
+
+
+
+
+
+```
+
+
+
+
+##
+```{r}
+path="~/Documents/shiny_dashboard/shiny_2/data/crosstalk/20220811_MiSeq-Sharkboy_220811-96_FASTQ_PF_clusters.sorted.csv"
+df = readr::read_csv(path)
+  df = as.data.frame( df)
+  rownames(df) = df$i7
+  df$i7 = NULL
+  all_reads_total_count = sum(df)
+  
+  good_df = as.data.frame(diag(as.matrix(df)))
+  names(good_df) = "Correct_Barcode_Combinations"
+  good_df = good_df %>% 
+    dplyr::add_rownames(var = "i5")
+  
+  bad_df = as.data.frame( bad_df)
+  
+  bad_df_long = bad_df %>% 
+    dplyr::add_rownames( var = "i7") %>% 
+    dplyr::mutate( i7 = paste("i7", i7, sep="_")) %>% 
+    tidyr::gather( A01: H12, key="i5", value = "Incorrect_Barcode_Combinations") %>% 
+    dplyr::filter( !is.na(Incorrect_Barcode_Combinations))
+  
+  
+  df_combined = bad_df_long %>% 
+    dplyr::left_join( good_df, by = "i5")
+  
+  n = round(all_reads_total_count*0.001,0)
+  
+  p = df_combined %>% 
+    ggplot()+ 
+    geom_boxplot(aes(i5, Incorrect_Barcode_Combinations )) +
+    geom_point( aes(i5, Correct_Barcode_Combinations)) +
+    scale_y_log10(labels = comma) +
+    geom_hline(yintercept=n,linetype=2, color = "red") +
+    geom_text(aes(20,n,label = paste("0.1% threshold,", n, "reads",sep=" "), vjust = -1, color = "red")) +
+    ylab("Reads") +
+    xlab("I5-TR") +
+    theme(axis.text.x = element_text(angle = 90))+
+    guides(color = FALSE)
+```
+
+
+
+
+
+
+## miseq density
+```{r}
+
+list.files("~/Documents/projects/Illumina_InterOp/outputs/")
+
+df_density = readr::read_csv("~/Documents/projects/Illumina_InterOp/outputs/MiSeq-Appa_Nov_cluster_density.csv")
+df_density$...1 = NULL
+df_density$content = NULL
+df_density
+
+readr::write_csv( df_density, "info/miseq_density_info.csv")
+
+```
+
+
+
+
+## nextseq pct occupency
+```{r}
+
+list.files("~/Documents/projects/Illumina_InterOp/outputs/")
+
+df_occupency = readr::read_csv("~/Documents/projects/Illumina_InterOp/outputs/MiSeq-Nov-Dec_percent_occupied.csv")
+df_occupency
+df_occupency$...1 = NULL
+
+
+df_occupency$percent_occupied = round(df_occupency$percent_occupied, 2)
+
+
+readr::write_csv( df_occupency, "info/nextseq_occupency_info.csv")
+
+```
+
+
