@@ -1,8 +1,12 @@
 #!/bin/bash
 
-rm -r demux_report
-mkdir demux_report
-rm -f file_to_get
+if [ -d demux_report ] ; then
+rm -rf demux_report
+fi
+
+if [ -f file_to_get ] ; then
+rm -r file_to_get
+fi
 
 
 aws s3 ls s3://seqwell-fastq/$1/ | grep -e txt | awk '{$1=$1}1' OFS="," | cut -f 4 -d "," > file_to_get
