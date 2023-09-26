@@ -1,6 +1,4 @@
-
-
-params.reference = 'Bacillus_subtilis'
+params.reference = 'Bacillus_subtilis.fa'
 
 //get bam index
 process get_bam_index{
@@ -60,7 +58,8 @@ output:
 
 
 workflow {
-  ref_channel = channel.fromPath( "ref/{" + params.reference  + "}.fa")
+  ref_channel = channel.fromPath( "ref/*" )
+  ref_channel.view()
   get_bam_index( ref_channel)
   get_fai_index( ref_channel)
   get_dict( ref_channel)
