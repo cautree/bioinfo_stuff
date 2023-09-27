@@ -18,3 +18,7 @@ cat meta_data/ref.fa | split -l 2 - ref/seq_
 ## number of reads in fastq
 cat file.fq | echo $((`wc -l`/4))
 zcat file.fastq.gz | paste - - - - | wc -l 
+
+
+##Sequence length of every entry in a multifasta file
+awk '/^>/ {if (seqlen){print seqlen}; print ;seqlen=0;next; } { seqlen = seqlen +length($0)}END{print seqlen}' ref_all.fa
