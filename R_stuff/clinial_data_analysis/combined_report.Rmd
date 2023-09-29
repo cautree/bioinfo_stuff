@@ -1,0 +1,85 @@
+---
+title: "combined_report"
+author: "Yanyan"
+date: "9/26/2023"
+output: html_document
+---
+
+
+library
+```{r}
+library(dplyr)
+```
+
+
+##
+```{r}
+
+df_pos = readr::read_csv("data1.csv")
+
+df_neg = readr::read_csv("data2.csv")
+
+df_all = dplyr::bind_rows( df_pos, df_neg)
+
+
+df_anno = readxl::read_excel("data.xlsx")
+table(df_anno$Polarity)
+df_final = df_all %>% 
+  dplyr::left_join( df_anno, by = c("CTSC_local_Lab", "Polarity"))
+
+
+readr::write_csv( df_final, "outputs/ctsc_reports_both_polarity.csv")
+
+```
+
+
+##for na
+```{r}
+
+na_count_bl_neg <- readr::read_csv("outputs/na_count_bl_neg.csv")
+na_count_y2_neg <- readr::read_csv("outputs/na_count_y2_neg.csv")
+
+na_count_bl_pos <- readr::read_csv("outputs/na_count_bl_pos.csv")
+na_count_y2_pos <- readr::read_csv("outputs/na_count_y2_pos.csv")
+
+names(na_count_bl_neg)[2] = "na_count_bl"
+names(na_count_bl_pos)[2] = "na_count_bl"
+
+names(na_count_y2_neg)[2] = "na_count_y2"
+names(na_count_y2_pos)[2] = "na_count_y2"
+
+y2_missing = dplyr::bind_rows(na_count_y2_pos, na_count_y2_neg )
+
+bl_missing = dplyr::bind_rows(na_count_bl_pos, na_count_bl_neg )
+
+
+
+```
+
+
+## selected
+```{r}
+
+df_selected = readxl::read_excel("data.xlsx")
+
+table(df_selected$selected, useNA = "ifany")
+
+df_selected_s = df_selected %>% 
+  dplyr::filter( selected ==1)
+
+```
+
+
+
+## selected report , total 491
+```{r}
+df_final
+df_final_s = df_final %>% 
+  dplyr::left_join(bl_missing ) %>% 
+  dplyr::left_join(y2_missing ) %>% 
+  dplyr::filter( CTSC_local_Lab %in% df_selected_s$CTSC_local_Lab) %>% 
+  dplyr::select( -selected)
+
+readr::write_csv( df_final_s, "outputs/report_ctsc_rLC_v2.csv")
+
+```

@@ -1,0 +1,243 @@
+---
+title: "anlysis"
+output: html_document
+---
+
+
+library
+```{r}
+library(dplyr)
+library(Hmisc)
+```
+
+
+
+
+## clinical data
+```{r}
+
+
+df_trt_info = readxl::read_excel("data.xls")
+df_trt_info$fishoilactive
+
+df_trt_info_s = df_trt_info %>% 
+  dplyr::select( subject_ID, BMI_CTSC_BL, BMI_CTSC_YR2,fishoilactive) %>% 
+  dplyr::rename( subjectId =subject_ID ) %>% 
+  dplyr::filter( fishoilactive ==0)
+
+
+```
+
+
+##
+```{r}
+
+df_meta = readr::read_csv("data.csv")
+
+df_meta = df_meta %>% 
+  dplyr::rename( subjectId = subject_ID) %>% 
+  dplyr::filter( subjectId %in% df_trt_info_s$subjectId) %>% 
+  dplyr::add_count(subjectId) %>% 
+  dplyr::filter(n==2) %>% 
+  dplyr::arrange( subjectId) %>% 
+  dplyr::select(-n)
+
+
+
+df_meta[-c(1:3)] = as.data.frame(apply( df_meta[-c(1:3)],
+                                     2,
+                                     function(y) (log(y) - median(log(y), na.rm = T))/ sd(log(y), na.rm = T)))
+
+
+
+df_meta_bl = df_meta %>% 
+  dplyr::filter( year ==0) %>% 
+  dplyr::select(-year, -plate_well)
+
+df_meta_y2 = df_meta %>% 
+  dplyr::filter( year ==2) %>% 
+  dplyr::select(-year, -plate_well)
+
+df_delta = df_meta_y2
+df_delta[-c(1)] = df_meta_y2[-c(1)] - df_meta_bl[-c(1)]
+
+
+
+na_count_bl_neg <- as.data.frame( sapply(df_meta_bl[-1], function(y) sum(length(which(is.na(y))))) )
+na_count_y2_neg <- as.data.frame( sapply(df_meta_y2[-1], function(y) sum(length(which(is.na(y))))) )
+names(na_count_bl_neg) = "na_count_bl_neg"
+names(na_count_y2_neg) = "na_count_y2_neg"
+na_count_bl_neg = na_count_bl_neg %>% 
+  dplyr::add_rownames( var ="CTSC_local_Lab")
+na_count_y2_neg = na_count_y2_neg %>% 
+  dplyr::add_rownames( var ="CTSC_local_Lab")
+
+readr::write_csv( na_count_bl_neg, "outputs/na_count_bl_neg.csv")
+readr::write_csv( na_count_y2_neg, "outputs/na_count_y2_neg.csv")
+
+```
+
+
+
+
+
+
+##
+```{r}
+
+df_bl_mean = as.data.frame( sapply(df_meta_bl[-1], mean, na.rm=T ))
+names(df_bl_mean) = "bl_mean"
+
+df_bl_sd = as.data.frame( sapply(df_meta_bl[-1], sd, na.rm=T ))
+names(df_bl_sd) = "bl_sd"
+
+df_y2_mean = as.data.frame( sapply(df_meta_y2[-1], mean, na.rm=T ))
+names(df_y2_mean) = "y2_mean"
+
+df_y2_sd = as.data.frame( sapply(df_meta_y2[-1], sd, na.rm=T ))
+names(df_y2_sd) = "y2_sd"
+
+df_mean = dplyr::bind_cols( df_bl_mean, df_y2_mean, df_bl_sd, df_y2_sd)
+df_mean = df_mean %>% 
+  dplyr::mutate( change = y2_mean - bl_mean) %>% 
+  dplyr::mutate( change_pct = 100*(y2_mean - bl_mean) /bl_mean)
+
+
+
+df_delta_mean = as.data.frame( sapply(df_delta[-1], mean, na.rm=T ))
+names(df_delta_mean) = "delta_mean"
+
+df_delta_sd = as.data.frame( sapply(df_delta[-1], sd, na.rm=T ))
+names(df_delta_sd) = "delta_sd"
+
+
+
+```
+
+
+
+##
+```{r}
+
+result = dplyr::bind_cols( df_mean, df_delta_mean, df_delta_sd)
+
+result = result %>% 
+  dplyr::mutate( delta_pct = 100*df_delta_mean /bl_mean)
+
+## report bl_mea, y2_mean, delta_mean
+cor(result$change, result$delta_mean)
+
+```
+
+
+## bl
+```{r}
+
+df_all_bl =df_trt_info_s %>% 
+  dplyr::right_join( df_meta_bl, by = "subjectId") %>% 
+  dplyr::select( -BMI_CTSC_YR2 )
+
+names(df_all_bl)
+
+
+
+df_all_bl_spearman= df_all_bl %>% 
+  tidyr::gather( `1753177`: `1594662`, key = "meta", value = "meta_reading") %>% 
+  tidyr::nest( -meta) %>% 
+  dplyr::mutate( spear_cor = purrr::map(.$data, function(x){
+    
+    spearman = rcorr( x$BMI_CTSC_BL, x$meta_reading , type = "spearman")
+    r=spearman$r[[2]][[1]]
+    p=spearman$P[[2]][[1]]
+    res = data.frame( spearman_bl_r = r,
+                      spearman_bl_p = p, stringsAsFactors = F)
+    return(res)
+  })) %>% 
+  dplyr::select(meta,spear_cor ) %>% 
+  tidyr::unnest()
+
+
+df_all_bl_pearson= df_all_bl %>% 
+  tidyr::gather( `1753177`: `1594662`, key = "meta", value = "meta_reading") %>% 
+  tidyr::nest( -meta) %>% 
+  dplyr::mutate( pearson_cor = purrr::map(.$data, function(x){
+    
+    pearson = rcorr( x$BMI_CTSC_BL, x$meta_reading , type = "pearson")
+    r=pearson$r[[2]][[1]]
+    p=pearson$P[[2]][[1]]
+    res = data.frame( pearson_bl_r = r,
+                      pearson_bl_p =p, stringsAsFactors = F)
+    return(res)
+  })) %>% 
+  dplyr::select(meta,pearson_cor ) %>% 
+  tidyr::unnest()
+```
+
+
+
+
+
+## delta
+```{r}
+names(df_trt_info_s)
+df_all_delta =df_trt_info_s %>% 
+  dplyr::mutate( BMI_delta = BMI_CTSC_YR2- BMI_CTSC_BL ) %>% 
+  dplyr::select(subjectId, BMI_delta) %>% 
+  dplyr::right_join( df_delta, by = "subjectId") 
+
+
+
+df_all_delta_spearman= df_all_delta %>% 
+  tidyr::gather( `1753177`: `1594662`, key = "meta", value = "meta_reading") %>% 
+  tidyr::nest( -meta) %>% 
+  dplyr::mutate( delta_spear_cor = purrr::map(.$data, function(x){
+    
+    spearman = rcorr( x$BMI_delta, x$meta_reading , type = "spearman")
+    r=spearman$r[[2]][[1]]
+    p=spearman$P[[2]][[1]]
+    res = data.frame( spearman_delta_r = r,
+                      spearman_delta_p =p, stringsAsFactors = F)
+    return(res)
+    
+  })) %>% 
+  dplyr::select(meta,delta_spear_cor ) %>% 
+  tidyr::unnest()
+
+
+df_all_delta_pearson= df_all_delta %>% 
+  tidyr::gather( `1753177`: `1594662`, key = "meta", value = "meta_reading") %>% 
+  tidyr::nest( -meta) %>% 
+  dplyr::mutate( delta_pearson_cor = purrr::map(.$data, function(x){
+    
+    pearson = rcorr( x$BMI_delta, x$meta_reading , type = "pearson")
+    r=pearson$r[[2]][[1]]
+    p=pearson$P[[2]][[1]]
+    res = data.frame( pearson_delta_r = r,
+                      pearson_delta_p =p, stringsAsFactors = F)
+    return(res)
+  })) %>% 
+  dplyr::select(meta,delta_pearson_cor ) %>% 
+  tidyr::unnest()
+df_all_delta_pearson
+```
+
+
+
+##
+```{r}
+result
+df_final_report = result %>% 
+  tibble::rownames_to_column( var = "meta") %>% 
+  dplyr::left_join(df_all_bl_spearman, by="meta" ) %>% 
+  dplyr::left_join(df_all_bl_pearson , by="meta") %>% 
+  dplyr::left_join(df_all_delta_spearman , by="meta") %>% 
+  dplyr::left_join(df_all_delta_pearson ) %>% 
+  dplyr::select( -change, -change_pct, -delta_pct) %>% 
+  dplyr::mutate( Polarity = "Neg") %>% 
+  dplyr::rename( CTSC_local_Lab = meta)
+  
+names(df_final_report)
+df_final_report
+
+readr::write_csv(df_final_report, "outputs/ctsc_report_neg.csv" )
+```
