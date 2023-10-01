@@ -165,9 +165,8 @@ java -jar /picard.jar CollectMultipleMetrics \
      cat ${pair_id}.insert.txt | awk 'NR > 10' | cut -d. -f1 | sed 's/\t/,/g' > ${pair_id}.insert.csv
 
      if $params.wgs; then
-     java -jar /picard.jar CollectWgsMetrics VALIDATION_STRINGENCY=SILENT CAP=1000000 I=$bam O=${pair_id}.wgs.txt R=${ref[0]}
+     java -jar /picard.jar CollectWgsMetrics VALIDATION_STRINGENCY=SILENT CAP=1000000 I=$bam COUNT_UNPAIRED=true MINIMUM_BASE_QUALITY=10 READ_LENGTH=5000 O=${pair_id}.wgs.txt R=${ref[0]}
      fi
-
 
 """
 }
