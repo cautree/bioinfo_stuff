@@ -1,52 +1,33 @@
-params.fa_b = "s3://seqwell-analysis/20230328_MiSeq-Appa/assembly-6PLT/100K-230328-NXTFR_FASTA/100K-230328-NXTFR_*.final.fasta"
-//params.fa_b = "s3://seqwell-analysis/20230328_MiSeq-Appa/assembly-raw/230328-NXTFR_FASTA/230328-NXTFR_*.final.fasta"
-params.fa_a = "concat_fasta/230328-NXTFR_*.final.fasta"
-params.run_2 = "100K-230328-NXTFR"
-params.run_1 = "230328-NXTFR"
-params.outdir = './results'
-params.outfile =  params.run_1 + "_vs_" + params.run_2
-params.dev = true
-params.run ="20230328_MiSeq-Appa"
-params.analysis = "fasta_compare_minimap"
-params.number_of_inputs =10
 
+params.outfile = "bota_plasmids_compare_gfa_ref_minimap"
 
+process minimap_gfa_ref {
 
-if(params.dev) { 
-   path_s3 = "seqwell-dev/analysis"
-} else { 
-   path_s3 = "seqwell-analysis"
-}
-
-
-
-process get_minimap_res {
-errorStrategy 'ignore'
-
-//publishDir path: "${params.outdir}/blastn_metric", mode: 'copy'
-
+publishDir path: 'minimap_compare_out', pattern: '*', mode: 'copy'
 input:
-tuple val(pair_id), val(name_fa_1),path(fa_1),  val(name_fa_2), path(fa_2)
+tuple val(ref_name), val(sample_id), path(ref_fa), path(gfa_fa)
 
 output:
-path ("*")
+path ("*.txt")
+
+
+
 
 """
 
-minimap2 -x ava-ont ${fa_1} ${fa_2} | cut -f 1-12 | awk 'BEGIN { OFS = "," } ;    {\$1="$name_fa_2";  \$6="$name_fa_1";print}'  > ${pair_id}.overlaps.txt
+minimap2 -x ava-ont  ${gfa_fa} ${ref_fa}  > ${sample_id}.overlaps.txt
 
 """
-
 }
 
 
 process combine_minimap_metrics {
 
-publishDir path: "s3://$path_s3/${params.run}/${params.analysis}/", pattern: "*.csv"
-
+//publishDir path: "s3://$path_s3/${params.run}/${params.analysis}/", pattern: "*.csv"
+publishDir path: '.', pattern: '*', mode: 'copy'
 
 input:
-tuple val(plate_id), path("*.txt")
+tuple val(params.outfile), path("*.txt")
 
 output:
 file ("*" )
@@ -57,31 +38,38 @@ file ("*" )
 }
 
 
+
+
+
 workflow {
 
 Channel
-      .fromPath( params.fa_a  )
-      .map { tuple( it.getBaseName(2).split("_")[1], it.getBaseName(2),  it ) }
-      .set {fa_1_file}
+      .fromPath( "../ref/*fa" , checkIfExists: true )
+      .map { tuple( it.baseName.tokenize(".")[0],   it ) }
+      .set {ref_file}
         
 Channel
-      .fromPath( params.fa_b )
-      .map { tuple( it.getBaseName(2).split("_")[1], it.getBaseName(2), it ) }
-      .set {fa_2_file}
+      .fromPath( "../assembly/gfa_files/fasta/*.fa" ,  checkIfExists: true )
+      .map { tuple( it.baseName.tokenize(".")[0].tokenize("_")[2], it.baseName.tokenize(".")[0] , it ) }
+      .set {gfa_file}
       
-//fa_1_file.view()
-//fa_2_file.view()        
-    combined_ch = fa_1_file.join(fa_2_file)
+//ref_file.view()
+//gfa_file.view()        
+    combined_ch = ref_file
+                  .cross(gfa_file)
+                  .map { it->  tuple( it[0][0], it[1][1], it[0][1], it[1][2])}
+//combined_ch.view()
     
-    res_ch = get_minimap_res(combined_ch)
+    res_ch = minimap_gfa_ref(combined_ch)
     
     all_res_ch = res_ch
-            .collect()
-            .map{ it -> tuple( params.outfile, it)}
+              .collect()
+              .map{ it -> tuple( params.outfile, it)}
   
     combine_minimap_metrics(all_res_ch)     
       
 }
+
 
 
 
