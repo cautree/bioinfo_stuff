@@ -45,7 +45,7 @@ process downsample_flye {
 
      """
      if [ $params.downsample_of_flye -gt 0 ]; then
-     seqtk sample -s 14 ${read1} $params.downsample | gzip > ${pair_id}.${params.downsample}_R1_flye_001.fastq.gz
+     seqtk sample -s 14 ${read1} $params.downsample_of_flye | gzip > ${pair_id}.${params.downsample_of_flye}_R1_flye_001.fastq.gz
     
     
      else
@@ -85,6 +85,7 @@ process downsample {
 
 process flye {
 
+errorStrategy 'ignore'
 
 publishDir path: '.', pattern: '*.csv', mode: 'copy'
 publishDir path: "s3://$path_s3/${params.run}/${params.analysis}"
@@ -100,7 +101,7 @@ tuple val(pair_id), val(plate_id), path('*.assembly_info.txt') into circle_csv
 
 """
 mkdir data
-flye --nano-raw ${fq} -g ${params.genome_size} --out-dir data
+flye --nano-raw ${fq} -g ${params.genome_size} --asm-coverage 50 --out-dir data
 mv data/assembly_info.txt ${pair_id}.assembly_info.txt 
 mv data/assembly.fasta ${pair_id}.assembly.fasta
 mv data/assembly_graph.gfa  ${pair_id}.assembly_graph.gfa 
