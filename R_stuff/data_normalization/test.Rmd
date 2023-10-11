@@ -1,0 +1,62 @@
+---
+title: "test"
+output: html_document
+date: '2023-09-30'
+---
+
+
+```{r}
+list.files()
+source("data_normalization_and_signal_correction.R")
+
+df_sample = readr::read_csv("vital_cvd_caco_SPM_20230406_cleaned_exp.csv")
+
+
+
+get_metabolites_mean_sd_CV(df_sample)
+na_of_metabolites(df_sample)
+get_normalized_data(df_sample)
+a = get_imputated_sample(df_sample) 
+na_of_metabolites(a)
+get_metabolites_moving_median(df_sample)
+b = get_residual_corrected_data(df_sample, 0.2)
+names(b)
+
+
+df_meta = df_sample
+df_data = df_meta[ names(df_meta)[grepl("[0-9]", names(df_meta))] ]
+  
+  df_data = df_meta[ c("plate_well", names(df_data))]
+  
+  df = df_data %>%
+    tidyr::gather( key="mzid", value= "meta_reading", -plate_well) %>%
+    tidyr::separate(plate_well, c( "plate", "well"), sep="_", remove = FALSE) %>% 
+    dplyr::select(-well) %>%
+    dplyr::select(plate_well, plate, everything()) %>%
+    tidyr::nest(-mzid) %>%
+    dplyr::mutate( mod1 = purrr::map(.$data, ~lm_model(.x))) %>%
+    dplyr::mutate(tidy_mod1 = purrr::map(.$mod1, ~broom::augment(.x))) %>%
+    dplyr::mutate(res = purrr::map2(.$data, .$tidy_mod1, function(x,y){
+      ## original data for late compare
+      x_s = x %>%
+        dplyr::rename(orig_plate = plate,
+                      orig_meta_reading = meta_reading)
+      ## residualized data, and original data
+      y_s = y %>%
+        dplyr::select(meta_reading, plate, .resid)
+      
+      z = dplyr::bind_cols(x_s, y_s)
+      return(z)
+      
+    }) )%>% 
+    dplyr::select(mzid, res) %>%
+    tidyr::unnest() # can check for the original data and corrected ones matched well or not
+  
+  
+  df_corrected = df %>%
+    dplyr::select(mzid, plate_well, .resid) %>%
+    tidyr::spread( key= mzid, value=.resid)
+
+
+```
+
