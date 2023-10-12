@@ -1,0 +1,8 @@
+new_id	old_id
+A01_AP-11878_R1_001.fastq.gz	bota_plasmids_A01_R1_001.fastq.gz
+A01_AP-11878_R2_001.fastq.gz	bota_plasmids_A01_R2_001.fastq.gz
+A02_AP-11878_R1_001.fastq.gz	bota_plasmids_A02_R1_001.fastq.gz
+A02_AP-11878_R2_001.fastq.gz	bota_plasmids_A02_R2_001.fastq.gz
+A03_AP-17024_R1_001.fastq.gz	bota_plasmids_A03_R1_001.fastq.gz
+A03_AP-17024_R2_001.fastq.gz	bota_plasmids_A03_R2_001.fastq.gz
+A04_AP-17024_R1_001.fastq.gz	bota_plasmids_A04_R1_001.fastq.gz
