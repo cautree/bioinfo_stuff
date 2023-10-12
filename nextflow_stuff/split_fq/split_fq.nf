@@ -15,6 +15,11 @@ if(params.dev) {
    path_s3 = "seqwell-analysis"
 }
 
+// notice how this fromFilePairs and splitFastq connected together if split like this, it does not work
+// fq = Channel
+ //    .fromFilePairs('*{1,2}_001.fastq.gz', compress: true, flat: true, checkIfExists: true)
+ //fq2 =fq
+//      .splitFastq(by: 500, pe: true, file: true)
 fq = Channel
      .fromFilePairs('*{1,2}_001.fastq.gz', compress: true, flat: true, checkIfExists: true)
      .splitFastq(by: 500, pe: true, file: true)
