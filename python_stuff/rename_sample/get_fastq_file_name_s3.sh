@@ -1,5 +1,6 @@
 #!/bin/bash
 
+## set -x is to view the code while running
 set -x;
 s3_path=$1
 run_name=$2
