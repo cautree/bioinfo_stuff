@@ -6,6 +6,7 @@ import os
 ##put the name.txt and rename.py in the fastq file folder
 
 path = 'name.txt'
+# sep is the alias for delimiter
 target_names = pd.read_csv(path, sep= "\t")
 name_dict = dict(zip( target_names.old_id, target_names.new_id))
 
