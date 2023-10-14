@@ -1,0 +1,34 @@
+coverage by genomeCoverageBed
+
+awk -v OFS='\t' {'print $1,$2'} Ap-11161.fa.fai > Ap-11161.txt
+
+
+genomeCoverageBed -ibam BC27_31_AP-11161.bam -g Ap-11161.txt > coverage.txt
+genomeCoverageBed -ibam BC27_31_AP-11161.bam > coverage2.txt
+
+
+
+#https://www.biostars.org/p/5165/
+
+AP-11161	737	1	5037	0.000198531
+AP-11161	1000	1	5037	0.000198531
+AP-11161	1094	1	5037	0.000198531
+AP-11161	1099	1	5037	0.000198531
+AP-11161	1132	1	5037	0.000198531
+AP-11161	1141	1	5037	0.000198531
+AP-11161	1146	1	5037	0.000198531
+AP-11161	1150	1	5037	0.000198531
+AP-11161	1152	1	5037	0.000198531
+AP-11161	1156	1	5037	0.000198531
+AP-11161	1157	1	5037	0.000198531
+AP-11161	1160	1	5037	0.000198531
+
+
+chromosome (or entire genome) [eg AP-11161]
+depth of coverage from features in input file [eg. 737]
+number of bases on chromosome (or genome) with depth equal to column 2. [eg. 1]
+size of chromosome (or entire genome) in base pairs [eg. 5037]
+fraction of bases on chromosome (or entire genome) with depth equal to column 2. [0.000198531]
+[all values taken from your first row]
+
+If you want to get the average coverage: add up the product of bases per coverage [737* 1+1000* 1+1094* 1+...] and divide by the total number of bases [5037].
