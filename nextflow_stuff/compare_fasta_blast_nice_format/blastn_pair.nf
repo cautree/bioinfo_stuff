@@ -26,7 +26,7 @@ blastn \
        -subject ${fa_2} \
        -outfmt 6 \
        -num_alignments 1 \
-       -out ${sample_id}.${ref_name}.txt
+       -out ${sample_id}_${ref_name}.txt
 
 """
 
