@@ -24,3 +24,48 @@ df = pd.read_csv(path, usecols=[0,1], comment="#")
 df.columns = ["insert_size", samp]
 df.head()
 
+df1 = pd.DataFrame( range(1,1001), columns = ['insert_size'])
+df1.head()
+
+path = 'Ecoli_20bb_F03.insert.csv'
+samp = path.replace('.insert.csv', '')
+df2 = pd.read_csv(path, usecols = [0,1], comment='#')
+df2.columns = ['insert_size', samp]
+df2.head()
+
+df = df1.merge( df2, how = 'left').fillna(0)
+df.head()
+
+#zip dict
+endings = ['.align.txt', '.insert.txt']
+sheetnames = [ 'CollectAlignmentSummary', 'CollectInsertSizeMetrics']
+sheet_dict = dict(zip(endings, sheetnames))
+
+#delimiter is an alias of sep
+df = pd.read_csv('230330-UDI-4_C11.align.txt', delimiter= '\t', skiprows =6, nrows =1)
+df.head()
+df = df.T
+df.head()
+
+path = '230330-UDI-4_C11.align.txt'
+ending = '.align.txt'
+sample = path.replace(ending, '').split('/')[-1]
+sample
+df.columns = [sample]
+df.head()
+
+
+tmp = pd.DataFrame([])
+tmp.head()
+df = df.merge( tmp, left_index = True, right_index =True, how ='outer')
+df.head()
+
+
+output_path = "metrics.xlsx"
+df1.T.sort_index()
+df1.T.sort_index().to_excel(output_path)
+
+
+
+
+
