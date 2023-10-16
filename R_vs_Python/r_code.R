@@ -122,6 +122,49 @@ df %>%
 
   df %>%
   dplyr::group_by( am, carb) %>%
-  dplyr::summarize (n = n())
+  dplyr::summarize (n = n()) %>%
+  dplyr::arrange(n )
+
+  df %>%
+  dplyr::group_by( am, carb) %>%
+  dplyr::summarize (n = n()) %>%
+  dplyr::arrange(-n )
+
+  df %>%
+  dplyr::arrange( am, vs)
+
+  ## data types
+sapply(df, class)
+
+class(df$am)
+
+df = df %>%
+dplyr::mutate( am = as.numeric(am))
+class(df$am)
+
+## missing values
+df5 = df
+df5$am[4:8] = NA
+sapply(df5, function(x) sum(is.na(x)))
+
+## fill na
+df5[is.na(df5)] = -9
+sapply(df5, function(x) sum(is.na(x)))
 
 
+## change char in some columns
+df5 %>%
+dplyr::mutate( model = stringr::str_replace(model, "RX4", "RX5")) %>%
+head()
+
+## rename a column
+df5 %>%
+dplyr::rename( GEAR = gear) %>%
+head()
+
+
+### data share the same columns
+dfa = readr::read_csv("mtcars3.csv")
+dfb = readr::read_csv("mtcars4.csv")
+dfab = dplyr::bind_rows( dfa, dfb)
+print(nrow(dfab) == (nrow(dfa) + nrow(dfb)) )# true

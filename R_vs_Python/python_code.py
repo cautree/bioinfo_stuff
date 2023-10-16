@@ -97,6 +97,66 @@ print(df.groupby('am').wt.min())
 
 
 ## multi index, and count the n in each category
-print(df.groupby(['am','carb'] ).vs.agg([len]))
+df_multi = df.groupby(['am','carb'] ).vs.agg([len])
+print(df_multi)
+
+mi = df_multi.index
+print(type(mi))
+print(df_multi.reset_index())
+
+print(df_multi.reset_index().sort_values(by='len'))
+
+
+print(df_multi.reset_index().sort_values(by='len', ascending=False))
+
+## sort by multiple values
+df.sort_values(by=['am', 'vs'])
+print(df.head())
+
+## data types
+print(df.dtypes)
+
+print(df.am.dtype)
+
+## change datatypes
+df['am'] = df.am.astype('int64')
+print(df.am.dtype)
+
+
+## missing values
+df5 = df
+df5['am'][4:8] = np.NaN
+df_null = pd.isnull(df5).sum()
+print(df_null)
+
+## fill the missing value
+df5 = df5.fillna(-9)
+df_null = pd.isnull(df5).sum()
+print(df_null)
+
+## change char in a specific column
+print(df5.index)
+df5.index = df5.index.str.replace("RX4", "RX5")
+print(df5.index)
+
+
+## rename a column, has to use columns=, and in the dict, the old name is the key
+df5 = df5.rename(columns= { "gear": "GEAR"})
+print(df5.columns)
+
+## rename index
+print(df5.index)
+df5 = df5.rename_axis("MODEL", axis='rows')
+print(df5.head())
+
+## concatenate, similar to dplyr::bind_rows()
+dfa = pd.read_csv("mtcars3.csv")
+dfb = pd.read_csv("mtcars4.csv")
+print(np.sum(dfa.columns == dfb.columns) == dfa.shape[1]) ##true
+dfab = pd.concat([dfa, dfb])
+print(dfab.shape[0] == (dfa.shape[0] + dfb.shape[0]) ) ## true
+
+
+
 
 
