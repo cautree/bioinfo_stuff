@@ -157,6 +157,14 @@ dfab = pd.concat([dfa, dfb])
 print(dfab.shape[0] == (dfa.shape[0] + dfb.shape[0]) ) ## true
 
 
+## concatenate, similar to dplyr::bind_rows()
+dfc = pd.read_csv("mtcars1.csv")
+dfd = pd.read_csv("mtcars2.csv")
+dfc.set_index( 'model', inplace=True)
+dfd.set_index( 'model', inplace=True)
+dfcd = dfc.merge(dfd, left_index = True, right_index= True )
+print(dfcd.shape[1] == dfc.shape[1] + dfd.shape[1]) # true
+
 
 
 
