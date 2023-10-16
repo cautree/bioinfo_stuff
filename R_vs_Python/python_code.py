@@ -7,6 +7,8 @@ df = pd.DataFrame( { "Yes": [50,21],
 print(df.head())
 
 
+
+
 s1 = pd.Series([1,2,3,4,5])
 s2 = pd.Series([2,3,4,5,6])
 df = pd.concat([s1,s2],axis=1)
@@ -149,6 +151,15 @@ print(df5.index)
 df5 = df5.rename_axis("MODEL", axis='rows')
 print(df5.head())
 
+
+## join
+dfc = pd.read_csv("mtcars1.csv")
+dfd = pd.read_csv("mtcars2.csv")
+dfc.set_index( 'model', inplace=True)
+dfd.set_index( 'model', inplace=True)
+dfcd = dfc.merge(dfd, left_index = True, right_index= True )
+print(dfcd.shape[1] == dfc.shape[1] + dfd.shape[1]) # true
+
 ## concatenate, similar to dplyr::bind_rows()
 dfa = pd.read_csv("mtcars3.csv")
 dfb = pd.read_csv("mtcars4.csv")
@@ -157,13 +168,7 @@ dfab = pd.concat([dfa, dfb])
 print(dfab.shape[0] == (dfa.shape[0] + dfb.shape[0]) ) ## true
 
 
-## concatenate, similar to dplyr::bind_rows()
-dfc = pd.read_csv("mtcars1.csv")
-dfd = pd.read_csv("mtcars2.csv")
-dfc.set_index( 'model', inplace=True)
-dfd.set_index( 'model', inplace=True)
-dfcd = dfc.merge(dfd, left_index = True, right_index= True )
-print(dfcd.shape[1] == dfc.shape[1] + dfd.shape[1]) # true
+
 
 
 

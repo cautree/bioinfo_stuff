@@ -163,12 +163,6 @@ dplyr::rename( GEAR = gear) %>%
 head()
 
 
-### data share the same columns
-dfa = readr::read_csv("mtcars3.csv")
-dfb = readr::read_csv("mtcars4.csv")
-dfab = dplyr::bind_rows( dfa, dfb)
-print(nrow(dfab) == (nrow(dfa) + nrow(dfb)) )# true
-
 
 ## join
 dfc = readr::read_csv("mtcars1.csv")
@@ -176,3 +170,12 @@ dfd = readr::read_csv("mtcars2.csv")
 dfcd = dfc %>%
    dplyr::left_join( dfd, by = "model")
 print(ncol(dfcd) == (ncol(dfc) + ncol(dfd) -1) )# true
+
+### data share the same columns
+dfa = readr::read_csv("mtcars3.csv")
+dfb = readr::read_csv("mtcars4.csv")
+dfab = dplyr::bind_rows( dfa, dfb)
+print(nrow(dfab) == (nrow(dfa) + nrow(dfb)) )# true
+
+
+
