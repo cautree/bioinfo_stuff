@@ -42,17 +42,31 @@ print(df.iloc[:,0])
 
 print(df.shape)
 
+
+## get the first several row
+print(df.iloc[0:5])
+print(df.iloc[0:5, :])
+
+## get the first several column
+print(df.iloc[:, 0:5])
+
+
 ## set the index
 df.set_index("model", inplace=True)
 print(df.head())
 print(df.index)
 
 
-## filter by column value using loc
+## filter by index value (column) using loc
 print(df.loc[df.mpg >25])
+
+## filter by  index value
+print( df.loc[ df.index == "Mazda RX4"])
 
 ## filter, R style
 print(df[df.mpg >25])
+## this does not work, need iloc
+## print(df[1,:])
 
 
 
@@ -77,6 +91,10 @@ print(df.am.unique())
 
 ## tabulate a column
 print(df.am.value_counts())
+## this get the length of the data, same as df.shape[0]
+print(df.am.count())
+print( df.am.count() == df.shape[0]) # true
+
 
 
 ## select rows which has the biggest weight in each am category
