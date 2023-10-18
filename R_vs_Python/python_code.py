@@ -80,8 +80,11 @@ print(df.loc[ df.mpg >25, :]) # this works
 
 ## in R it is like this 
 # mtcars[mtcars$wt >4,]
-## this does not work, need iloc
-## print(df[1,:])
+## both does not work, need iloc
+## print(df[1,:]); print(df[1])
+s_a = df.iloc[1] # this work, created Series
+print(s_a) 
+print (isinstance(s_a, pd.Series))  # true
 
 
 
