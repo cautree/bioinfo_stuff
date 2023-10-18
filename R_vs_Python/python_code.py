@@ -6,6 +6,7 @@ df = pd.DataFrame( { "Yes": [50,21],
                      "No": [131,2], 
                      })
 print(df.head())
+print( df.iloc[0,0] == 50) # true
 
 
 
@@ -14,10 +15,13 @@ s1 = pd.Series([1,2,3,4,5])
 s2 = pd.Series([2,3,4,5,6])
 df = pd.concat([s1,s2],axis=1)
 print(df.head())
+print(df.shape)
+print( list(df.shape) == [5,2]) # true
 
 ## method3: data can be from list, list comprehension
 df_insert_size = pd.DataFrame(range(1,1001), columns = ['insert_size'])
 print(df_insert_size.head())
+print( list(df_insert_size.shape) == [1000,1])
 
 
 ## method4: list of list
@@ -27,6 +31,7 @@ data += [[samp, tpm_1, tpm_2]]
 data += [[samp, tpm_1, tpm_2]]
 df_tpm = pd.DataFrame( data, columns= ['samp', 'tpm_1', 'tpm_2'])
 print(df_tpm)
+print( list(df_tpm.shape) == [2,3])
 
 
 
@@ -57,14 +62,24 @@ print(df.head())
 print(df.index)
 
 
-## filter by index value (column) using loc
-print(df.loc[df.mpg >25])
+## filter using logical criterion
+print(sum(df.mpg >25) == 6) #true
+df_s = df.loc[df.mpg >25]
+print( df_s.shape == (6,11) ) #true
+
 
 ## filter by  index value
 print( df.loc[ df.index == "Mazda RX4"])
 
-## filter, R style
+## filter, no need loc in this case
 print(df[df.mpg >25])
+
+# print(df[df.mpg >25, :])  # this does not work
+print(df.loc[ df.mpg >25, :]) # this works
+
+
+## in R it is like this 
+# mtcars[mtcars$wt >4,]
 ## this does not work, need iloc
 ## print(df[1,:])
 
