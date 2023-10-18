@@ -135,7 +135,7 @@ print(df4.shape) #10
 
 
 ## group and counts
-print(df.groupby('am').am.value_counts())
+print(df.groupby('am').vs.value_counts())
 
 ## group, get the min for another variable
 print(df.groupby('am').wt.min())
