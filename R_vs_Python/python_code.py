@@ -109,6 +109,9 @@ print(df.am.unique())
 
 ## tabulate a column
 print(df.am.value_counts())
+print( type( df.am.value_counts))
+
+
 ## this get the length of the data, same as df.shape[0]
 print(df.am.count())
 print( df.am.count() == df.shape[0]) # true
@@ -127,7 +130,11 @@ print(df_am_2.head())
 
 
 ## agregate for more function
-print(df.groupby(['am']).wt.agg([ len, min, max]))
+
+df_group_am = df.groupby(['am']).wt.agg([ len, min, max])
+print(type(df_group_am))
+print(df_group_am)
+print( isinstance(df_group_am, pd.DataFrame))
 
 
 ## normallization using lambda function
