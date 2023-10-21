@@ -1,0 +1,91 @@
+---
+title: "automate_creation_of_name.txt"
+output: html_document
+date: '2023-10-17'
+---
+
+#Rscript -e "rmarkdown::render('automate_creation_of_name.txt_more_plates_updated.Rmd')"
+
+## library
+```{r}
+library(dplyr)
+```
+
+
+Run ID 20231019_MiSeq-Appa
+Plates: ASU-384-Q1_FASTQ,ASU-384-Q2_FASTQ,ASU-384-Q3_FASTQ,ASU-384-Q4_FASTQ
+
+## get the fastq file
+```{bash}
+
+s3_path="seqwell-fastq"
+run_name="20231019_MiSeq-Appa"
+plates=("ASU-384-Q1_FASTQ" "ASU-384-Q2_FASTQ" "ASU-384-Q3_FASTQ" "ASU-384-Q4_FASTQ")
+
+for plate_name in "${plates[@]}"
+do
+  aws s3 cp s3://${s3_path}/${run_name}/${plate_name}/  fastq --recursive
+done
+
+```
+
+
+
+
+## get the old name
+```{bash}
+
+bash get_fastq_name.sh
+
+```
+
+
+
+
+## modify old name
+```{r}
+
+df_old = readr::read_tsv("old_name")
+df_old
+df_old = df_old %>% 
+  dplyr::mutate( sample_info = stringr::str_extract_all(old_id, "[A-Z][0-9]{2}_R[1,2]_001.fastq.gz", simplify = T)) %>% 
+  dplyr::mutate( Well = stringr::str_extract_all(old_id, "[A-Z][0-9]{2}", simplify =T )) %>% 
+  dplyr::mutate( plate = stringr::str_replace_all( old_id, sample_info, "")) %>% 
+  dplyr::mutate( plate = stringr::str_replace_all(plate, "_", ""))
+
+table(df_old$plate)
+```
+
+
+
+## use map file to create name.txt
+```{r}
+list.files()
+## no _ in the name
+
+map_file1 = "20231019_MiSeq-Appa_1832_SampleMap_ASU-384-Q1.csv"
+map_file2 = "20231019_MiSeq-Appa_1832_SampleMap_ASU-384-Q2.csv"
+map_file3 = "20231019_MiSeq-Appa_1832_SampleMap_ASU-384-Q3.csv"
+map_file4 = "20231019_MiSeq-Appa_1832_SampleMap_ASU-384-Q4.csv"
+
+map_files = list( map_file1, map_file2, map_file3, map_file4)
+plate_names = c("ASU-384-Q1","ASU-384-Q2","ASU-384-Q3","ASU-384-Q4")
+
+get_sample_name = function( sample_map, plate_name ){
+  
+  df_map = readr::read_csv(sample_map) %>% 
+    dplyr::mutate( plate = plate_name)
+  sample_name = df_map %>% 
+    dplyr::left_join( df_old, by = c("Well", "plate")) %>% 
+    dplyr::mutate( ref = stringr::str_replace_all(Reference, ".fasta", "")) %>% 
+    dplyr::mutate( new_id = paste(plate, ref, sample_info, sep="_")) %>% 
+    dplyr::select( new_id, old_id)
+  return(sample_name)
+}
+
+
+sample = purrr::map2_dfr( map_files,  plate_names, get_sample_name)
+
+readr::write_tsv( sample, "name.txt")
+
+```

@@ -2,8 +2,8 @@
 
 ## -n is to get rid of extra line after echo
 s3_path="seqwell-fastq"
-run_name="20231017_MiSeq-Yoda"
-plates=("ASU-Ctrl_FASTQ" "ASU-T1_FASTQ")
+run_name="20231019_MiSeq-Appa"
+plates=("ASU-384-Q1_FASTQ" "ASU-384-Q2_FASTQ" "ASU-384-Q3_FASTQ" "ASU-384-Q4_FASTQ")
 
 echo -n old_id  > old_name
 for plate_name in "${plates[@]}"

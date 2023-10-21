@@ -12,16 +12,15 @@ library(dplyr)
 ```
 
 
-
+Run ID 20231019_MiSeq-Appa
+Plates: ASU-384-Q1_FASTQ,ASU-384-Q2_FASTQ,ASU-384-Q3_FASTQ,ASU-384-Q4_FASTQ
 
 ## get the fastq file
 ```{bash}
 
-#Plate 1 ASU-Ctrl_FASTQ:  s3://seqwell-fastq/20231017_MiSeq-Yoda/ASU-Ctrl_FASTQ/
-#Plate 2 ASU-T1_FASTQ:  s3://seqwell-fastq/20231017_MiSeq-Yoda/ASU-T1_FASTQ/
 s3_path="seqwell-fastq"
-run_name="20231017_MiSeq-Yoda"
-plates=("ASU-Ctrl_FASTQ" "ASU-T1_FASTQ")
+run_name="20231019_MiSeq-Appa"
+plates=("ASU-384-Q1_FASTQ" "ASU-384-Q2_FASTQ" "ASU-384-Q3_FASTQ" "ASU-384-Q4_FASTQ")
 
 for plate_name in "${plates[@]}"
 do
@@ -36,9 +35,7 @@ done
 ## get the old name
 ```{bash}
 
-
 bash get_fastq_name.sh
-
 
 ```
 
@@ -56,7 +53,6 @@ df_old = df_old %>%
   dplyr::mutate( plate = stringr::str_replace_all( old_id, sample_info, "")) %>% 
   dplyr::mutate( plate = stringr::str_replace_all(plate, "_", ""))
 
-
 table(df_old$plate)
 ```
 
@@ -67,12 +63,13 @@ table(df_old$plate)
 list.files()
 ## no _ in the name
 
-map_file1 = "20231017_MiSeq-Yoda_1827_SampleMap_ASU-Ctrl.csv"
-map_file2 = "20231017_MiSeq-Yoda_1827_SampleMap_ASU-T1.csv"
-
+map_file1 = "20231019_MiSeq-Appa_1832_SampleMap_ASU-384-Q1.csv"
+map_file2 = "20231019_MiSeq-Appa_1832_SampleMap_ASU-384-Q2.csv"
+map_file3 = "20231019_MiSeq-Appa_1832_SampleMap_ASU-384-Q3.csv"
+map_file4 = "20231019_MiSeq-Appa_1832_SampleMap_ASU-384-Q4.csv"
 
 df_map = readr::read_csv(map_file1) %>% 
-  dplyr::mutate( plate = "ASU-Ctrl")
+  dplyr::mutate( plate = "ASU-384-Q1")
 sample_name1 = df_map %>% 
   dplyr::left_join( df_old, by = c("Well", "plate")) %>% 
   dplyr::mutate( ref = stringr::str_replace_all(Reference, ".fasta", "")) %>% 
@@ -80,16 +77,34 @@ sample_name1 = df_map %>%
   dplyr::select( new_id, old_id)
 
 df_map = readr::read_csv(map_file2) %>% 
-  dplyr::mutate( plate = "ASU-T1")
-
-
+  dplyr::mutate( plate = "ASU-384-Q2")
 sample_name2 = df_map %>% 
   dplyr::left_join( df_old, by = c( "Well", "plate")) %>% 
   dplyr::mutate( ref = stringr::str_replace_all(Reference, ".fasta", "")) %>% 
   dplyr::mutate( new_id = paste(plate, ref, sample_info, sep="_")) %>% 
   dplyr::select( new_id, old_id)
 
-sample = dplyr::bind_rows(sample_name1, sample_name2)
+
+
+df_map = readr::read_csv(map_file3) %>% 
+  dplyr::mutate( plate = "ASU-384-Q3")
+sample_name3 = df_map %>% 
+  dplyr::left_join( df_old, by = c("Well", "plate")) %>% 
+  dplyr::mutate( ref = stringr::str_replace_all(Reference, ".fasta", "")) %>% 
+  dplyr::mutate( new_id = paste(plate, ref, sample_info, sep="_")) %>% 
+  dplyr::select( new_id, old_id)
+
+
+df_map = readr::read_csv(map_file4) %>% 
+  dplyr::mutate( plate = "ASU-384-Q4")
+sample_name4 = df_map %>% 
+  dplyr::left_join( df_old, by = c( "Well", "plate")) %>% 
+  dplyr::mutate( ref = stringr::str_replace_all(Reference, ".fasta", "")) %>% 
+  dplyr::mutate( new_id = paste(plate, ref, sample_info, sep="_")) %>% 
+  dplyr::select( new_id, old_id)
+
+
+sample = dplyr::bind_rows(sample_name1, sample_name2, sample_name3, sample_name4)
 
 readr::write_tsv( sample, "name.txt")
 
