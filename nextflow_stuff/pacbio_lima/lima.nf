@@ -1,6 +1,6 @@
 #!/usr/local/bin/nextflow
 
-
+//worked on 20231029
 //m84063_230721_173251_s1.hifi_reads.bc1001.bam
 
 process lima {
