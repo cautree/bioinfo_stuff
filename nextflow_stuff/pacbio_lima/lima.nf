@@ -32,7 +32,7 @@ demux.${pair_id}.bam
 
 workflow{
 
-params.sample = "m84063_230721_173251_s1.hifi_reads.unassigned"
+
 bam_ch = channel
            .fromPath("bam/*bam") 
            .map { it -> tuple( it.baseName.tokenize('.')[2], it)}
