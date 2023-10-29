@@ -34,8 +34,8 @@ bam_ch = channel
 bam_ch.view()
 
 //add the i5 i7 as reverse complement of what nextseq takes          
-
 barcode_fa = file( params.barcodes )
+
 lima( bam_ch, barcode_fa)
 }
 //docker_image: quay.io/biocontainers/lima:2.7.1--h9ee0642_0
