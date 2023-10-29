@@ -1,6 +1,7 @@
 #!/usr/local/bin/nextflow
 
 //worked on 20231029
+// can only run local, for some reason batch run keeps have same issue
 //m84063_230721_173251_s1.hifi_reads.bc1001.bam
 
 process lima {
