@@ -2,8 +2,9 @@
 //worked on 20231029
 // can only run local, for some reason batch run keeps have same issue
 //m84063_230721_173251_s1.hifi_reads.bc1001.bam
-
-params.samples = "bam/*.bam"
+params.samples = "m84063_230721_173251_s1.hifi_reads.bc1001.bam"
+//do not use as a channel, otherwise, it stops at the first sample
+params.barcodes = "./barcodes.fa"
 
 process lima {
 
@@ -16,28 +17,26 @@ output:
 path ('*')
 
 """
-mkdir ${pair_id}_log
-mkdir ${pair_id}_bam
 lima -d -j 128 --peek-guess  --ccs --min-length 100 --min-score 26 \
 --split-named --log-level INFO \
---log-file ${pair_id}_log/${pair_id}.lima.log \
+--log-file ${pair_id}.lima.log \
 ${bam} \
 ${barcode} \
-${pair_id}_bam/demux.${pair_id}.bam
+demux.${pair_id}.bam
 """
 }
 
 workflow{
 bam_ch = channel
-           .fromPath(params.samples) 
+           .fromPath("bam/" + params.samples ) 
            .map { it -> tuple( it.baseName.tokenize('.')[2], it)}
          
 bam_ch.view()
 
 //add the i5 i7 as reverse complement of what nextseq takes          
-barcode_ch = channel.fromPath("barcodes.fa")
-                    .collect()
-lima( bam_ch, barcode_ch)
+barcode_fa = file( params.barcodes )
+
+lima( bam_ch, barcode_fa)
 }
 //docker_image: quay.io/biocontainers/lima:2.7.1--h9ee0642_0
 //install_on_linux: wget https://anaconda.org/bioconda/lima/2.7.1/download/linux-64/lima-2.7.1-h9ee0642_0.tar.bz2
