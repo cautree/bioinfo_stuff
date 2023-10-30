@@ -8,7 +8,7 @@
   while read line; do
   name=$(basename bamfile/$line .bam)
   
-  newname=$(echo $name | tr -d '-' | cut -d. -f2- | tr -d 'seqwell' | tr -d '.')
+  newname=${params.date}_\$(echo \$name | tr -d '-' | cut -d. -f2- | sed 's/seqwell//g' | tr -d '.')
   mv bamfile/${line} renamed_bamfile/${newname}.bam
   
   done < file

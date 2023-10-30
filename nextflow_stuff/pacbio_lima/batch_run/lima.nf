@@ -2,48 +2,50 @@
 //batch worked on 20231029
 //m84063_230721_173251_s1.hifi_reads.bc1001.bam
 // the *p.bam is the sampled one with smaller size for testing
-params.samples = "*p.bam"
+params.samples = "*2p.bam"
 //do not use as a channel, otherwise, it stops at the first sample
 params.barcodes = "./barcodes.fa"
 params.date = "231029"
 
 process lima {
 
-publishDir path: 'demux', pattern: '*', mode: 'copy'
-publishDir path: 'ubam', pattern: "${params.date}_*.bam", mode: 'copy' // has to used "" for the pattern
+publishDir path: 'lima_out', pattern: 'demux/*', mode: 'copy'
+publishDir path: 'lima_out', pattern: "ubam/*.bam", mode: 'copy' // has to used "" for the pattern
 
 input:
 tuple val(pair_id), path(bam)
 each path (barcode)
 
 output:
-path ('*')
+path ('demux/*')
+path ('ubam/*.bam')
 
 
 """
+mkdir -p demux
 lima -d -j 128 --peek-guess  --ccs --min-length 100 --min-score 26 \
 --split-named --log-level INFO \
---log-file ${pair_id}.lima.log \
+--log-file demux/${pair_id}.lima.log \
 ${bam} \
 ${barcode} \
-demux.${pair_id}.bam
+demux/demux.${pair_id}.bam
+
 
 mkdir bamfile 
-mkdir renamed_bamfile
-cp *.bam bamfile/
+mkdir ubam
+cp demux/*.bam bamfile/
 ls -1 bamfile > file
 while read line; do
 name=\$(basename bamfile/\$line .bam)
 
 
-newname=${params.date}_\$(echo \$name | tr -d '-' | cut -d. -f2- | tr -d 'seqwell' | tr -d '.')
-mv bamfile/\${line} renamed_bamfile/\${newname}.bam
+newname=${params.date}_\$(echo \$name | tr -d '-' | cut -d. -f2- | sed 's/seqwell//g' | tr -d '.')
+mv bamfile/\${line} ubam/\${newname}.bam
 
 done < file
-mv renamed_bamfile/${params.date}_* .
-rm -rf bamfile
-rm -rf renamed_bamfile
 
+rm -rf bamfile 
+rm file
 
 
 """
