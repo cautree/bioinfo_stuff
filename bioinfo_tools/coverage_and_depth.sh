@@ -80,6 +80,10 @@ cat coverage.txt | head -6
 awk '$2==0 {print}' coverage.txt 
 
 
+## sampling 10%
+samtools view -s 0.1 -b m84063_230721_173251_s1.hifi_reads.bc1002.bam -h > m84063_230721_173251_s1.hifi_reads.bc1002_10p.bam
+
+
 
 
 
