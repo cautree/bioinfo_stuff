@@ -6,3 +6,4 @@ nextflow run lima.nf \
 -work-dir s3://seqwell-dev/analysis/pacbio/lima_test/ \
 --samples $samples \
 -bg -resume
+
