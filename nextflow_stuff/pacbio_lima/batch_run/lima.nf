@@ -10,7 +10,7 @@ params.date = "231029"
 process lima {
 
 publishDir path: 'demux', pattern: '*', mode: 'copy'
-
+publishDir path: 'ubam', pattern: "${params.date}_*.bam", mode: 'copy' // has to used "" for the pattern
 
 input:
 tuple val(pair_id), path(bam)
@@ -18,7 +18,7 @@ each path (barcode)
 
 output:
 path ('*')
-path ('*.bam') ,  emit: bam_file
+
 
 """
 lima -d -j 128 --peek-guess  --ccs --min-length 100 --min-score 26 \
@@ -27,23 +27,26 @@ lima -d -j 128 --peek-guess  --ccs --min-length 100 --min-score 26 \
 ${bam} \
 ${barcode} \
 demux.${pair_id}.bam
+
+mkdir bamfile 
+mkdir renamed_bamfile
+cp *.bam bamfile/
+ls -1 bamfile > file
+while read line; do
+name=\$(basename bamfile/\$line .bam)
+
+
+newname=${params.date}_\$(echo \$name | tr -d '-' | cut -d. -f2- | tr -d 'seqwell' | tr -d '.')
+mv bamfile/\${line} renamed_bamfile/\${newname}.bam
+
+done < file
+mv renamed_bamfile/${params.date}_* .
+rm -rf bamfile
+rm -rf renamed_bamfile
+
+
+
 """
-}
-
-process rename_bam{
-publishDir path: 'ubam', pattern: '*.bam', mode: 'copy'
-
-input:
-tuple val(pair_id), path(bam)
-output:
-path('*.bam')
-
-"""
-mv $bam ${pair_id}.bam
-
-"""
-
-
 }
 
 
@@ -60,18 +63,7 @@ barcode_fa = file( params.barcodes )
 lima_out =lima( bam_ch, barcode_fa)
 //lima_out.bam_file.view()
 
-lima_out_flat = lima_out.bam_file.flatten()
-//lima_out_flat.view()
 
-//demux.bc1002_10p.seqwell_G01_P5--seqwell_G01_P7.bam
-lima_out_flat_renamed = lima_out_flat
-                       // .map { it -> tuple(it.baseName.tokenize('.')[1..2].join('.').replace('.seqwell',''), it)}
-                        .map { it -> tuple(it.baseName.tokenize('.')[1..2].join('.').replace('.seqwell','').tokenize('_')[0..2].join('_'), it)}
-                        .map { it -> tuple(params.date+ '_' + it[0], it[1])}
-
-//lima_out_flat_renamed.view()
-
-rename_bam (lima_out_flat_renamed)
 }
 //docker_image: quay.io/biocontainers/lima:2.7.1--h9ee0642_0
 //install_on_linux: wget https://anaconda.org/bioconda/lima/2.7.1/download/linux-64/lima-2.7.1-h9ee0642_0.tar.bz2

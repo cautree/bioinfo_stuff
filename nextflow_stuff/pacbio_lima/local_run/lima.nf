@@ -65,7 +65,6 @@ lima_out_flat = lima_out.bam_file.flatten()
 
 //demux.bc1002_10p.seqwell_G01_P5--seqwell_G01_P7.bam
 lima_out_flat_renamed = lima_out_flat
-                       // .map { it -> tuple(it.baseName.tokenize('.')[1..2].join('.').replace('.seqwell',''), it)}
                         .map { it -> tuple(it.baseName.tokenize('.')[1..2].join('.').replace('.seqwell','').tokenize('_')[0..2].join('_'), it)}
                         .map { it -> tuple(params.date+ '_' + it[0], it[1])}
 
