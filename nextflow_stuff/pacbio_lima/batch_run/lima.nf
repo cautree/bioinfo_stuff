@@ -1,6 +1,5 @@
 #!/usr/local/bin/nextflow
-//worked on 20231029
-// can only run local, for some reason batch run keeps have same issue
+//batch worked on 20231029
 //m84063_230721_173251_s1.hifi_reads.bc1001.bam
 params.samples = "m84063_230721_173251_s1.hifi_reads.bc1001.bam"
 //do not use as a channel, otherwise, it stops at the first sample
