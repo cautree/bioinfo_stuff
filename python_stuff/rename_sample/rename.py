@@ -20,4 +20,4 @@ for path in paths:
         os.rename(path, out)
     except:
         pass
-
+## try except can avoid situations where the fastq files are more than needed for the alignment
