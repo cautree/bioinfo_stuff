@@ -30,23 +30,19 @@ ${bam} \
 ${barcode} \
 demux/demux.${pair_id}.bam
 
-
 mkdir bamfile 
 mkdir ubam
 cp demux/*.bam bamfile/
 ls -1 bamfile > file
+
 while read line; do
 name=\$(basename bamfile/\$line .bam)
-
-
 newname=${params.date}_\$(echo \$name | tr -d '-' | cut -d. -f2- | sed 's/seqwell//g' | tr -d '.')
 mv bamfile/\${line} ubam/\${newname}.bam
-
 done < file
 
 rm -rf bamfile 
 rm file
-
 
 """
 }
