@@ -1,6 +1,7 @@
 params.reference = 'Bacillus_subtilis.fa'
 
 //get bam index
+//need to copy back the fasta in the ref folder
 process get_bam_index{
 
 publishDir path: "ref", mode: "copy"
