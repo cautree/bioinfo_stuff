@@ -10,7 +10,7 @@ params.date = "231029"
 process lima {
 
 publishDir path: 'lima_out', pattern: 'demux/*', mode: 'copy'
-publishDir path: 'lima_out', pattern: "ubam/*.bam", mode: 'copy' // has to used "" for the pattern
+publishDir path: 'lima_out', pattern: 'ubam/*.bam', mode: 'copy' 
 
 input:
 tuple val(pair_id), path(bam)
