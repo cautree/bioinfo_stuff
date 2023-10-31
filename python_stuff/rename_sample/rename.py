@@ -14,7 +14,10 @@ paths = [ path for path in sorted(os.listdir('.'))]
 
 for path in paths:
     old_id = path
-    out = path.replace(old_id, name_dict[old_id])
-    print(path, out)
-    os.rename(path, out)
+    try:
+        out = path.replace(old_id, name_dict[old_id])
+        print(path, out)
+        os.rename(path, out)
+    except:
+        pass
 
