@@ -12,6 +12,8 @@ process FASTQC {
    """
 }
 reads_ch = Channel.fromPath( 'SH-colonyPCR_H02_R1_001.fastq.gz' )
+//does not work
+//reads_ch = Channel.fromPath( '${projectDir}/SH-colonyPCR_H02_R1_001.fastq.gz' )
 
 workflow {
   FASTQC(reads_ch)
