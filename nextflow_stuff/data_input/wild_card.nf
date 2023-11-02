@@ -22,4 +22,7 @@ Channel
 Channel
     .fromPath("data/" + params.plate + "/file_{1,2,3,4}.fq")
     .view()
+
+
+
     

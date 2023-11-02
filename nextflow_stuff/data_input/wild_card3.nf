@@ -12,3 +12,8 @@ Channel
 Channel
     .fromPath("data/" + params.plate1 + "/file_[1-4].fq")
     .view()
+
+//work   
+Channel
+    .fromPath("data/" + params.plate + "/file_[1-4].fq")
+    .view()
