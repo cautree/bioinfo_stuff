@@ -1,0 +1,62 @@
+ # create an image and push to docker hub
+ docker build -t cautree/alpine-python3 .
+ docker tag cautree/alpine-python3 cautree/alpine-python3
+ docker push cautree/alpine-python3
+
+## have a sum.py in the run_docker folder and run as below
+*   docker container run: use Docker to run a container
+*   --mount type=bind,source=${PWD},target=/temp: connect my current working directory (${PWD}) as a folder inside the container called /temp
+*   alice/alpine-python: name of the container image to use to run the container
+*   python3 /temp/sum.py: what commands to run in the container
+
+ docker container run --mount type=bind,source=${PWD},target=/temp cautree/alpine-python3 python3 /temp/sum.py
+
+
+
+
+## --workdir/-w flag sets the working directory, this returns /home/yanyan/
+docker container run -w /home/yanyan/ cautree/alpine-python3 pwd
+
+## --user/-u flag lets you specify the username you would like to run the container as.
+docker container run -w /home/yanyan/ --user $(id -u):$(id -g)  cautree/alpine-python3 pwd 
+
+## run interactively
+docker container run --mount type=bind,source=${PWD},target=/temp -it cautree/alpine-python3 sh
+
+
+## list all Docker containers on your system with
+docker ps -a
+
+## search with
+docker search tensorflow
+
+## run interactively 
+docker run -i -t ubuntu /bin/bash
+
+## cleaning containers
+docker rm ffbb0f60bda6 960588723c36 # cleaning by ID
+docker rm sad_keller ecstatic_hugle # cleaning by name
+## clean all those containers that are not running
+docker rm `docker ps --all -q`
+
+## cleaning images
+
+Cleaning up containers and images is a two-step process
+docker rmi nginx
+
+## summary
+Remove stopped containers with docker rm
+Delete unnecessary images with docker rmi
+docker run --rm allows to automatically remove containers at completion
+
+## feeding two commands at once to the container by separating them with a semi-colon, and running through bash -c
+docker run cautree/alpine-python3 sh -c 'touch empty-file ; ls -l empty-file'
+
+
+## -v /host/path:/container/path
+docker run -v `pwd`:/data ubuntu ls -l /data
+docker run -v `pwd`:/data -w /data continuumio/miniconda3:4.5.12 python app.py input
+
+
+# run app.py with argument input
+docker run -v `pwd`:/data -w /data continuumio/miniconda3:4.5.12 python app.py input
