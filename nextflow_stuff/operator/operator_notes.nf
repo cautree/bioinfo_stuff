@@ -62,3 +62,23 @@ ch = channel
         .map{ it-> tuple(it.getName().split("\\.")[0], it) }
         .groupTuple()
         .view() 
+
+// mix
+ch1 = channel.of( 1,2,3 )
+ch2 = channel.of( 'X','Y' )
+ch3 = channel.of( 'mt' )
+
+ch4 = ch1.mix(ch2,ch3).view()
+
+// join on the key, defaul is the first item in each tuple
+reads1_ch = channel
+  .of(['wt', 'wt_1.fq'], ['mut','mut_1.fq'])
+reads2_ch= channel
+  .of(['wt', 'wt_2.fq'], ['mut','mut_2.fq'])
+
+  
+reads_ch = reads1_ch
+  .join(reads2_ch, by:0)
+//same as
+reads_ch = reads1_ch
+  .join(reads2_ch)
