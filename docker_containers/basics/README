@@ -4,12 +4,15 @@
  docker push cautree/alpine-python3
 
 ## have a sum.py in the run_docker folder and run as below
+docker container run --mount type=bind,source=${PWD},target=/temp cautree/alpine-python3 python3 /temp/sum.py
+
+# work too, used -w /temp, then do not need /temp/sum.py, just sum.py will work
+docker container run --mount type=bind,source=${PWD},target=/temp -w /temp cautree/alpine-python3 python3 sum.py
+
 *   docker container run: use Docker to run a container
 *   --mount type=bind,source=${PWD},target=/temp: connect my current working directory (${PWD}) as a folder inside the container called /temp
 *   alice/alpine-python: name of the container image to use to run the container
 *   python3 /temp/sum.py: what commands to run in the container
-
- docker container run --mount type=bind,source=${PWD},target=/temp cautree/alpine-python3 python3 /temp/sum.py
 
 
 
