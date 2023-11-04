@@ -60,3 +60,6 @@ docker run -v `pwd`:/data -w /data continuumio/miniconda3:4.5.12 python app.py i
 
 # run app.py with argument input
 docker run -v `pwd`:/data -w /data continuumio/miniconda3:4.5.12 python app.py input
+
+### works too
+docker run -v `pwd`:/data  continuumio/miniconda3:4.5.12 python /data/app.py /data/input
