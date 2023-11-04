@@ -29,6 +29,8 @@ docker container run -w /home/yanyan/ --user $(id -u):$(id -g)  cautree/alpine-p
 ## run interactively
 docker container run --mount type=bind,source=${PWD},target=/temp -it cautree/alpine-python3 sh
 
+## date.txt is saved in local, seems like if you run -it can not save the files
+docker container run --mount type=bind,source=${PWD},target=/temp  cautree/alpine-python3 echo date >date.txt
 
 ## list all Docker containers on your system with
 docker ps -a
@@ -62,6 +64,7 @@ docker run cautree/alpine-python3 sh -c 'touch empty-file ; ls -l empty-file'
 ## -v /host/path:/container/path
 docker run -v `pwd`:/data ubuntu ls -l /data
 docker run -v `pwd`:/data -w /data continuumio/miniconda3:4.5.12 python app.py input
+
 
 
 # run app.py with argument input
