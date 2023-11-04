@@ -117,3 +117,9 @@ sed -n l data.tsv
 #1\t25.5\t1364.0\t22.5\t13.2$
 #2\t10.1\t215.56\t1.15\t22.2$
 #now, tab is denoted as \t and $ means the end of the line.
+
+## remove different prefix
+files=( "a.txt"  "b.csv")
+for file in ${files[@]}; do
+echo ${file%.*}
+done
