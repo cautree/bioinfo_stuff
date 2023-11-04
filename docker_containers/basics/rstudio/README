@@ -1,0 +1,5 @@
+docker pull rocker/tidyverse:3.5
+
+## work
+docker run -v `pwd`:/data -w /data rocker/tidyverse:3.5 Rscript readings.R --mean dataset/inflammation-*.csv
+
