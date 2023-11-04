@@ -20,6 +20,9 @@ docker container run --mount type=bind,source=${PWD},target=/temp -w /temp cautr
 ## --workdir/-w flag sets the working directory, this returns /home/yanyan/
 docker container run -w /home/yanyan/ cautree/alpine-python3 pwd
 
+## as a comparision, this returns /
+docker container run  cautree/alpine-python3 pwd 
+
 ## --user/-u flag lets you specify the username you would like to run the container as.
 docker container run -w /home/yanyan/ --user $(id -u):$(id -g)  cautree/alpine-python3 pwd 
 
