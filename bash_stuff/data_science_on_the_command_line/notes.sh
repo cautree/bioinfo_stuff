@@ -173,3 +173,30 @@ echo ' hello     world!' |
 
 ## same thing one line
 echo ' hello     world!' | sed -re 's/hello/bye/;s/\s+/ /g;s/\s+//'
+
+
+# command-line tools for CSV, I’d like to introduce you to three command-line tools, 
+# aptly named: body75, header76, and cols77
+echo -e "value\n7\n2\n5\n3" | body sort -n
+
+## add the header calling count
+seq 5 | header -a count
+
+## count all the lines, 6
+seq 5 | header -a count | wc -l
+
+## count lines except header, 6
+seq 5 | header -a count | body wc -l
+
+## head -d did not show the header
+< iris.csv header -d | trim
+
+## only the header need to capitalized
+seq -f "Line %g" 5  | header -a line | header -e "tr '[a-z]' '[A-Z]'"
+
+##
+< tips.csv cols -c day body "tr '[a-z]' '[A-Z]'"  | head -n 5   
+
+## keep the head, and then do the filtering
+< tips.csv awk -F, 'NR==1 || ($1 > 40.0) && ($5 ~ /^S/)'
+

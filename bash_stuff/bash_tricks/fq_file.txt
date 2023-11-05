@@ -1,0 +1,3 @@
+example.fastq.gz
+seqA.1000.fastq.gz
+seqB.1000.fastq.gz
