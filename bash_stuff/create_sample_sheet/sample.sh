@@ -1,0 +1,8 @@
+echo "PB_003 PB_007 PB_021 PB_024 PB_038 PB_044 PB_048 PB_055 PB_056 PB_060 PB_079 PB_083 PB_089 PB_116 PB_140 PB_149 PB_153 PB_169 PB_173 PB_178 PB_181 PB_184 PB_193 PB_207" | tr " " "\n" > 20231108_MiSeq-Appa_1863.txt
+
+sed   's/PB_//g' 20231108_MiSeq-Appa_1863.txt > 20231108_MiSeq-Appa_1863_v1.txt
+
+awk ' BEGIN{OFS="\t"};{print $0, "231108_"$1, "n0"}'  20231108_MiSeq-Appa_1863_v1.txt  > 20231108_MiSeq-Appa_1863_v2.txt
+
+cp 20231108_MiSeq-Appa_1863_v2.txt 20231108_MiSeq-Appa_1863.txt
+

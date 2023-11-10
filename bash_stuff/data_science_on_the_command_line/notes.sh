@@ -61,6 +61,8 @@ csvgrep top2000.csv --columns ARTIEST --regex '^Queen$' | csvlook -I
 in2csv --names top2000.xlsx
 
 ## most frequently used 10 words
+## s means silencing the info while down load
+## With curl, however, you need to specify the -L or --location option in order to be redirected.
 curl -sL "https://www.gutenberg.org/files/11/11-0.txt" | \
 tr '[:upper:]' '[:lower:]' | \
 grep -oE "[a-z\']{2,}" | \
@@ -111,7 +113,7 @@ seq -f "Line %g" 10 | tee lines
 ## remove the last 3
 < lines head -n -3
 
-## line 4 to 6
+## keep line 4 to 6
 < lines sed -n '4,6p'
 < lines awk '(NR>=4) && (NR<=6)'
 < lines head -n 6 | tail -n 3
