@@ -30,5 +30,8 @@ RUN wget -q -O - $URL | tar -zxv && \
     rm -rf ./${NAME}-${VERSION} 
 
 
+## this did not work well
+##instead used the the other image
+#has to register in aws first
 
 
