@@ -1,0 +1,34 @@
+### Base Image
+FROM amazonlinux:latest
+
+RUN yum install -y python3
+RUN yum install -y python3-pip
+
+RUN yum -y  install gcc-c++ 
+RUN pip3 install --upgrade cmake
+
+
+### Installing bamtools
+RUN yum -y install wget tar pip
+RUN yum -y install  git curl make gcc 
+RUN yum -y install zlib-devel bzip2
+
+
+ENV VERSION 2.4.1
+ENV NAME bamtools
+ENV URL "https://github.com/pezmaster31/bamtools/archive/v${VERSION}.tar.gz"
+
+RUN wget -q -O - $URL | tar -zxv && \
+    cd ${NAME}-${VERSION} && \
+    mkdir build && \
+    cd build && \
+    cmake .. && \
+    make && \
+    make install && \
+    cd ../.. && \
+    cp ./${NAME}-${VERSION}/lib/libbamtools.so.${VERSION} /usr/lib/ && \
+    rm -rf ./${NAME}-${VERSION} 
+
+
+
+
