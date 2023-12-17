@@ -1,10 +1,9 @@
-### Base Image
 FROM amazonlinux:latest
 
 RUN yum install -y python3
 RUN yum install -y python3-pip
 
-RUN yum -y  install gcc-c++ 
+RUN yum -y  install gcc-c++ aws-cli
 RUN pip3 install --upgrade cmake
 
 
@@ -22,16 +21,19 @@ RUN wget -q -O - $URL | tar -zxv && \
     cd ${NAME}-${VERSION} && \
     mkdir build && \
     cd build && \
-    cmake .. && \
+    cmake   .. && \
     make && \
-    make install && \
+    make  install && \
     cd ../.. && \
     cp ./${NAME}-${VERSION}/lib/libbamtools.so.${VERSION} /usr/lib/ && \
-    rm -rf ./${NAME}-${VERSION} 
+    rm -rf ./${NAME}-${VERSION}  && \
+    strip /usr/local/bin/bamtools*
+    
+RUN echo "/usr/lib" >> /etc/ld.so.conf.d/onevpl.conf && ldconfig
 
 
-## this did not work well
-##instead used the the other image
-#has to register in aws first
+    
 
 
+    
+    
