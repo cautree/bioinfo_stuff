@@ -31,7 +31,10 @@ RUN wget -q -O - $URL | tar -zxv && \
     
 RUN echo "/usr/lib" >> /etc/ld.so.conf.d/onevpl.conf && ldconfig
 
-
+#find code in other containers
+#docker pull chenzj/dfimage    
+#alias dfimage="docker run -v /var/run/docker.sock:/var/run/docker.sock --rm chenzj/dfimage"
+#dfimage imageID
     
 
 
